@@ -1,6 +1,7 @@
 import { ethers } from "ethers";
-import VotingABI from "./VotingABI.json";
+import VotingArtifact from "./VotingABI.json";
 
+const ABI = VotingArtifact.abi || VotingArtifact;
 const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS;
 
 /**
@@ -8,9 +9,9 @@ const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS;
  */
 export const getReadContract = async () => {
   const provider = new ethers.JsonRpcProvider(
-    import.meta.env.VITE_RPC_URL || "http://127.0.0.1:8545"
+    import.meta.env.VITE_RPC_URL || "https://sepolia.infura.io/v3/94dfee208e4940f1884efb07ea267274"
   );
-  return new ethers.Contract(CONTRACT_ADDRESS, VotingABI, provider);
+  return new ethers.Contract(CONTRACT_ADDRESS, ABI, provider);
 };
 
 /**
@@ -20,7 +21,7 @@ export const getWriteContract = async () => {
   if (!window.ethereum) throw new Error("MetaMask not installed");
   const provider = new ethers.BrowserProvider(window.ethereum);
   const signer   = await provider.getSigner();
-  return new ethers.Contract(CONTRACT_ADDRESS, VotingABI, signer);
+  return new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
 };
 
 /**

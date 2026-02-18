@@ -1,9 +1,10 @@
 import { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { ethers } from "ethers";
 import toast from "react-hot-toast";
-import VotingABI from "../utils/VotingABI.json";
+import VotingArtifact from "../utils/VotingABI.json";
 
 const Web3Context = createContext(null);
+const VotingABI = VotingArtifact.abi || VotingArtifact;
 
 const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS;
 
