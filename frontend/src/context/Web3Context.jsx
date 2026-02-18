@@ -33,9 +33,17 @@ export function Web3Provider({ children }) {
       const network      = await web3Provider.getNetwork();
       const cId          = Number(network.chainId);
 
+      // Auto-switch to Sepolia if on wrong network
       if (!SUPPORTED_CHAIN_IDS.includes(cId)) {
-        setNetworkError(`Unsupported network (chainId: ${cId}). Please switch to a supported network.`);
-        toast.error("Unsupported network. Please switch network in MetaMask.");
+        try {
+          await window.ethereum.request({
+            method: "wallet_switchEthereumChain",
+            params: [{ chainId: "0xaa36a7" }], // Sepolia
+          });
+        } catch (switchErr) {
+          setNetworkError("Please switch MetaMask to Sepolia testnet.");
+          toast.error("Please switch to Sepolia testnet in MetaMask.");
+        }
       } else {
         setNetworkError(null);
       }
