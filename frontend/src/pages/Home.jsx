@@ -53,11 +53,12 @@ export default function Home() {
               </Link>
             </>
           )}
-          {!account && (
-            <button onClick={connectWallet} className="flex items-center gap-2 text-blue-400 border border-blue-500/30 hover:bg-blue-500/10 px-6 py-3 rounded-lg transition-colors">
-              <SiEthereum /> Connect MetaMask
-            </button>
-          )}
+          <Link
+            to="/admin-login"
+            className="flex items-center gap-2 text-purple-400 border border-purple-500/30 hover:bg-purple-500/10 px-6 py-3 rounded-lg transition-colors text-sm font-medium"
+          >
+            🔒 Admin Login
+          </Link>
         </div>
 
         {/* Stats */}

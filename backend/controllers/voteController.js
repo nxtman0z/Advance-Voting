@@ -1,102 +1,145 @@
 const User = require("../models/User");
-const { verifyVoteOnChain, castVoteOnChain } = require("../utils/blockchainUtils");
 const Election = require("../models/Election");
+const Party = require("../models/Party");
+const { castVoteOnChain, getResultsOnChain, getVoterStatusOnChain, prepareVoterForElections } = require("../utils/blockchainService");
 
 // ─────────────────────────────────────────────
 // @route   GET /api/vote/elections
-// @desc    Get all active elections available to the voter
+// @desc    Active elections with their parties (for voters)
 // @access  Private (voter)
 // ─────────────────────────────────────────────
 exports.getActiveElections = async (req, res) => {
   try {
-    const now = new Date();
+    // Show elections that are "active" or "upcoming" — trust admin-set status
     const elections = await Election.find({
-      status: "active",
-      startTime: { $lte: now },
-      endTime: { $gte: now },
-    }).select("-registeredVoters");
+      status: { $in: ["active", "upcoming"] },
+    })
+      .select("-registeredVoters -candidates")
+      .lean();
 
-    res.status(200).json({ success: true, count: elections.length, data: elections });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
+    // Attach parties + voter status for each election
+    const user = await User.findById(req.user.id).select("votedElections");
 
-// ─────────────────────────────────────────────
-// @route   GET /api/vote/election/:id
-// @desc    Get election details with candidates
-// @access  Private (voter)
-// ─────────────────────────────────────────────
-exports.getElectionById = async (req, res) => {
-  try {
-    const election = await Election.findById(req.params.id).populate("createdBy", "fullName");
+    const result = await Promise.all(
+      elections.map(async (election) => {
+        const parties = await Party.find({ election: election._id })
+          .select("partyName partySymbol partyImage candidateName candidateBio candidatePhoto onChainCandidateId voteCount")
+          .sort({ createdAt: 1 })
+          .lean();
 
-    if (!election) {
-      return res.status(404).json({ success: false, message: "Election not found" });
-    }
+        const alreadyVoted = user.votedElections
+          ? user.votedElections.some((v) => v.electionId === election.onChainId)
+          : false;
 
-    // Check if voter is registered for this election
-    const user = await User.findById(req.user.id);
-    const isRegistered = election.registeredVoters.some(
-      (rv) => rv.userId.toString() === user._id.toString()
+        return { ...election, parties, alreadyVoted };
+      })
     );
 
-    const hasVoted = user.hasVotedInElection(election.onChainId);
-
-    res.status(200).json({
-      success: true,
-      data: { ...election.toObject(), isRegistered, hasVoted },
-    });
+    res.status(200).json({ success: true, count: result.length, data: result });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
 
 // ─────────────────────────────────────────────
+// @route   POST /api/vote/prepare
+// @desc    Pre-register + pre-fund voter wallet for all elections (call on page load)
+// @access  Private (voter)
+exports.prepareVoter = async (req, res) => {
+  try {
+    const Election = require("../models/Election");
+    const elections = await Election.find({
+      status: { $in: ["active", "upcoming"] },
+      isBlockchainDeployed: true,
+    }).select("onChainId");
+
+    const ids = elections.map((e) => e.onChainId).filter(Boolean);
+    if (ids.length === 0) {
+      return res.status(200).json({ success: true, message: "No elections to prepare" });
+    }
+
+    // Run in background — respond immediately so UI doesn't wait
+    prepareVoterForElections(req.user.id, ids).catch((e) =>
+      console.warn("prepareVoter background error:", e.message)
+    );
+
+    res.status(200).json({ success: true, message: "Preparation started in background" });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
 // @route   POST /api/vote/cast
-// @desc    Cast a vote (after face + OTP verification)
-// @access  Private (verified voter)
+// @desc    Cast a vote (face verified on frontend, OTP verified, blockchain backend cast)
+// @access  Private (voter)
+// Body: { electionId (MongoDB _id), partyId (MongoDB _id) }
 // ─────────────────────────────────────────────
 exports.castVote = async (req, res) => {
   try {
-    const { electionId, candidateId, txHash } = req.body;
+    const { electionId, partyId } = req.body;
 
-    if (!electionId || !candidateId || !txHash) {
-      return res.status(400).json({ success: false, message: "Missing required fields" });
+    if (!electionId || !partyId) {
+      return res.status(400).json({ success: false, message: "electionId and partyId are required" });
     }
 
     const user = await User.findById(req.user.id);
 
-    // Check if already voted
-    if (user.hasVotedInElection(electionId)) {
+    // ── Check OTP verification ───────────────────────────────────────────
+    if (!user.otpVerified) {
+      return res.status(403).json({
+        success: false,
+        message: "OTP verification required before voting",
+      });
+    }
+
+    // ── Load election + party ────────────────────────────────────────────
+    const [election, party] = await Promise.all([
+      Election.findById(electionId),
+      Party.findById(partyId),
+    ]);
+
+    if (!election) return res.status(404).json({ success: false, message: "Election not found" });
+    if (!party) return res.status(404).json({ success: false, message: "Party not found" });
+    if (party.election.toString() !== electionId) {
+      return res.status(400).json({ success: false, message: "Party does not belong to this election" });
+    }
+
+    // ── Double-vote check (MongoDB) ──────────────────────────────────────
+    const alreadyVoted = user.votedElections &&
+      user.votedElections.some((v) => v.electionId === election.onChainId);
+    if (alreadyVoted) {
       return res.status(400).json({ success: false, message: "You have already voted in this election" });
     }
 
-    // Verify the transaction on blockchain
-    const isValid = await verifyVoteOnChain(txHash, user.walletAddress, electionId, candidateId);
-    if (!isValid) {
-      return res.status(400).json({ success: false, message: "Vote transaction verification failed" });
-    }
+    // ── Cast on blockchain (relayer) ─────────────────────────────────────
+    const { txHash, voterAddress } = await castVoteOnChain(
+      user._id,
+      election.onChainId,
+      party.onChainCandidateId
+    );
 
-    // Record the vote in MongoDB
-    user.votedElections.push({ electionId, txHash, votedAt: new Date() });
+    // ── Record in MongoDB ────────────────────────────────────────────────
+    user.votedElections = user.votedElections || [];
+    user.votedElections.push({
+      electionId: election.onChainId,
+      partyId: party._id,
+      txHash,
+      votedAt: new Date(),
+    });
+    // Clear OTP verified flag
+    user.otpVerified = false;
     await user.save({ validateBeforeSave: false });
 
-    // Update election vote count cache
-    await Election.findOneAndUpdate(
-      { onChainId: electionId, "candidates.candidateId": candidateId },
-      {
-        $inc: {
-          totalVotes: 1,
-          "candidates.$.voteCount": 1,
-        },
-      }
-    );
+    // Update cached vote count in party doc
+    party.voteCount += 1;
+    await party.save();
+    election.totalVotes += 1;
+    await election.save();
 
     res.status(200).json({
       success: true,
-      message: "Vote cast successfully and recorded on blockchain",
-      data: { txHash, electionId, candidateId },
+      message: "Vote cast successfully on blockchain!",
+      data: { txHash, voterAddress, partyName: party.partyName, candidateName: party.candidateName },
     });
   } catch (error) {
     console.error("castVote error:", error);
@@ -106,52 +149,64 @@ exports.castVote = async (req, res) => {
 
 // ─────────────────────────────────────────────
 // @route   GET /api/vote/my-votes
-// @desc    Get voter's voting history
+// @desc    Voter's own voting history
 // @access  Private (voter)
 // ─────────────────────────────────────────────
 exports.getMyVotes = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select("votedElections");
-    res.status(200).json({ success: true, data: user.votedElections });
+    const user = await User.findById(req.user.id).select("votedElections fullName email phone photo");
+    res.status(200).json({ success: true, data: user });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
 
 // ─────────────────────────────────────────────
-// @route   GET /api/vote/results/:electionId
-// @desc    Get election results (only after election ends)
+// @route   GET /api/vote/results
+// @desc    Get results for all elections (or one)
 // @access  Public
 // ─────────────────────────────────────────────
 exports.getResults = async (req, res) => {
   try {
-    const election = await Election.findOne({ onChainId: req.params.electionId });
+    const elections = await Election.find({ isBlockchainDeployed: true })
+      .select("title state status totalVotes onChainId startTime endTime")
+      .lean();
 
-    if (!election) {
-      return res.status(404).json({ success: false, message: "Election not found" });
-    }
+    const enriched = await Promise.all(
+      elections.map(async (election) => {
+        const parties = await Party.find({ election: election._id })
+          .select("partyName partySymbol candidateName voteCount onChainCandidateId")
+          .sort({ voteCount: -1 })
+          .lean();
 
-    if (!election.resultsPublished && new Date() < election.endTime) {
-      return res.status(403).json({
-        success: false,
-        message: "Results will be available after the election ends",
-      });
-    }
+        // Determine winner (most votes, only if ended)
+        let winner = null;
+        if (new Date() >= new Date(election.endTime) && parties.length > 0) {
+          winner = parties[0]; // already sorted desc
+        }
 
-    const sortedCandidates = [...election.candidates].sort((a, b) => b.voteCount - a.voteCount);
+        return { ...election, parties, winner };
+      })
+    );
 
-    res.status(200).json({
-      success: true,
-      data: {
-        election: {
-          title: election.title,
-          endTime: election.endTime,
-          totalVotes: election.totalVotes,
-        },
-        results: sortedCandidates,
-        winner: sortedCandidates[0] || null,
-      },
-    });
+    res.status(200).json({ success: true, data: enriched });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ─────────────────────────────────────────────
+// @route   GET /api/vote/status/:electionMongoId
+// @desc    Get voter's status for a specific election (from blockchain)
+// @access  Private
+// ─────────────────────────────────────────────
+exports.getVoterStatus = async (req, res) => {
+  try {
+    const election = await Election.findById(req.params.electionMongoId);
+    if (!election) return res.status(404).json({ success: false, message: "Election not found" });
+
+    const status = await getVoterStatusOnChain(req.user.id, election.onChainId);
+    res.status(200).json({ success: true, data: status });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

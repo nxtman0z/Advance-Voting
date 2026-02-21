@@ -13,7 +13,8 @@ exports.sendOtp = async (req, res) => {
     if (!user) return res.status(404).json({ success: false, message: "User not found" });
 
     // Cool-down: prevent spamming (1 OTP per 60 seconds)
-    if (user.otpExpires && user.otpExpires > new Date(Date.now() - 60 * 1000)) {
+    // otpExpires = createdAt + 10 min → was created in last 60s if otpExpires > now + 9 min
+    if (user.otpExpires && user.otpExpires > new Date(Date.now() + 9 * 60 * 1000)) {
       return res.status(429).json({
         success: false,
         message: "Please wait 60 seconds before requesting a new OTP",
@@ -28,11 +29,19 @@ exports.sendOtp = async (req, res) => {
     user.otpVerified = false;
     await user.save({ validateBeforeSave: false });
 
-    await sendOTP(user.email, user.phone, otp, "voting");
+    try {
+      await sendOTP(user.email, user.phone, otp, "voting");
+    } catch (emailErr) {
+      console.error("sendOtp email error:", emailErr.message);
+      return res.status(500).json({
+        success: false,
+        message: "Failed to send OTP email. Please contact admin.",
+      });
+    }
 
     res.status(200).json({
       success: true,
-      message: `OTP sent to ${user.email} and ${user.phone}`,
+      message: `OTP sent to ${user.email}`,
     });
   } catch (error) {
     console.error("sendOtp error:", error);

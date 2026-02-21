@@ -1,17 +1,22 @@
 const nodemailer = require("nodemailer");
 const twilio = require("twilio");
 
-// ─── Nodemailer Transporter ───────────────────────────────────────────────────
-const emailTransporter = nodemailer.createTransport({
-  service: process.env.EMAIL_SERVICE || "gmail",
-  host: process.env.EMAIL_HOST || "smtp.gmail.com",
-  port: process.env.EMAIL_PORT || 587,
-  secure: false,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
+// ─── Email transporter (lazy init) ───────────────────────────────────────────
+let _transporter = null;
+
+function getTransporter() {
+  if (_transporter) return _transporter;
+
+  _transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+  });
+  console.log("✉️  Gmail SMTP transporter ready:", process.env.EMAIL_USER);
+  return _transporter;
+}
 
 // ─── Twilio Client ────────────────────────────────────────────────────────────
 let twilioClient = null;
@@ -44,23 +49,19 @@ exports.sendOTP = async (email, phone, otp, purpose = "voting") => {
 
   const emailHtml = generateEmailTemplate(otp, purpose);
 
-  const errors = [];
+  console.log(`\n🔑 OTP generated for ${email}  (purpose: ${purpose})\n`);
 
-  // ─── Email ───────────────────────────────────────────────────────────
-  try {
-    await emailTransporter.sendMail({
-      from: `"Blockchain Voting System" <${process.env.EMAIL_USER}>`,
-      to: email,
-      subject,
-      html: emailHtml,
-    });
-    console.log(`✉️  OTP email sent to ${email}`);
-  } catch (err) {
-    console.error("❌ Email OTP failed:", err.message);
-    errors.push(`Email: ${err.message}`);
-  }
+  // ─── Send via Gmail ────────────────────────────────────────────────────
+  const transporter = getTransporter();
+  const info = await transporter.sendMail({
+    from: `"BlockVote" <${process.env.EMAIL_USER}>`,
+    to: email,
+    subject,
+    html: emailHtml,
+  });
+  console.log(`✉️  OTP email sent to ${email}  [${info.response}]`);
 
-  // ─── SMS via Twilio ───────────────────────────────────────────────────
+  // ─── SMS via Twilio (optional) ────────────────────────────────────────
   if (twilioClient && phone) {
     try {
       await twilioClient.messages.create({
@@ -71,12 +72,7 @@ exports.sendOTP = async (email, phone, otp, purpose = "voting") => {
       console.log(`📱 OTP SMS sent to ${phone}`);
     } catch (err) {
       console.error("❌ SMS OTP failed:", err.message);
-      errors.push(`SMS: ${err.message}`);
     }
-  }
-
-  if (errors.length > 0 && errors.length === 2) {
-    throw new Error("Failed to send OTP via both email and SMS");
   }
 };
 

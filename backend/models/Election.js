@@ -35,6 +35,11 @@ const electionSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    state: {
+      type: String,
+      trim: true,
+      default: "National",
+    },
     electionType: {
       type: String,
       enum: ["general", "local", "organizational", "referendum"],

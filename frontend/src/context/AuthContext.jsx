@@ -42,10 +42,11 @@ export function AuthProvider({ children }) {
 
   // ─── Register ─────────────────────────────────────────────────────────
   const register = async (formData) => {
-    const { data } = await API.post("/auth/register", formData);
+    const { data } = await API.post("/auth/register", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
     localStorage.setItem("token", data.token);
     setUser(data.data);
-    toast.success("Registration successful! Check your OTP.");
     return data;
   };
 
@@ -57,7 +58,13 @@ export function AuthProvider({ children }) {
     toast.success(`Welcome back, ${data.data.fullName}!`);
     return data;
   };
-
+  // ─── Admin Wallet Login ───────────────────────────────────────────
+  const adminWalletLogin = async ({ address, signature, message }) => {
+    const { data } = await API.post("/auth/admin-wallet-login", { address, signature, message });
+    localStorage.setItem("token", data.token);
+    setUser(data.data);
+    return data;
+  };
   // ─── Logout ───────────────────────────────────────────────────────────
   const logout = async () => {
     try { await API.post("/auth/logout"); } catch {}
@@ -79,8 +86,7 @@ export function AuthProvider({ children }) {
   // ─── Send OTP ─────────────────────────────────────────────────────────
   const sendOTP = async () => {
     const { data } = await API.post("/vote/otp/send");
-    toast.success("OTP sent to your email and phone");
-    return data;
+    return data;  // caller handles toast/message
   };
 
   // ─── Register Face ────────────────────────────────────────────────────
@@ -111,7 +117,7 @@ export function AuthProvider({ children }) {
       value={{
         user, loading, otpVerified, faceVerified,
         setFaceVerified, setOtpVerified,
-        register, login, logout,
+        register, login, adminWalletLogin, logout,
         verifyOTP, sendOTP, registerFace,
         updateWallet, verifyAccount,
         API,

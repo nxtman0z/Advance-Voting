@@ -7,9 +7,11 @@ import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
 import Register from "./pages/Register";
 import Login from "./pages/Login";
+import Dashboard from "./pages/Dashboard";
 import Vote from "./pages/Vote";
 import Results from "./pages/Results";
 import Admin from "./pages/Admin";
+import AdminLogin from "./pages/AdminLogin";
 
 import { useAuth } from "./context/AuthContext";
 
@@ -18,19 +20,37 @@ const ProtectedRoute = ({ children, adminOnly = false }) => {
   const { user, loading } = useAuth();
   if (loading) return <div className="flex items-center justify-center h-screen text-white">Loading...</div>;
   if (!user) return <Navigate to="/login" replace />;
-  if (adminOnly && user.role !== "admin") return <Navigate to="/" replace />;
+  if (adminOnly && user.role !== "admin") return <Navigate to="/dashboard" replace />;
   return children;
 };
 
 function AppRoutes() {
+  const { user } = useAuth();
+
+  // Redirect logged-in users away from /login and /register
+  const AuthRedirect = ({ children }) => {
+    if (user) return <Navigate to="/dashboard" replace />;
+    return children;
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 text-white">
       <Navbar />
       <main className="pt-16">
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<AuthRedirect><Register /></AuthRedirect>} />
+          <Route path="/login" element={<AuthRedirect><Login /></AuthRedirect>} />
+          <Route path="/results" element={<Results />} />
+          <Route path="/admin-login" element={<AuthRedirect><AdminLogin /></AuthRedirect>} />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/vote"
             element={
@@ -39,7 +59,6 @@ function AppRoutes() {
               </ProtectedRoute>
             }
           />
-          <Route path="/results" element={<Results />} />
           <Route
             path="/admin"
             element={
@@ -73,3 +92,4 @@ export default function App() {
     </Router>
   );
 }
+

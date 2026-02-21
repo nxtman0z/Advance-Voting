@@ -27,13 +27,27 @@ const userSchema = new mongoose.Schema(
     },
     nationalId: {
       type: String,
-      required: [true, "National ID is required"],
+      required: false,
       unique: true,
+      sparse: true,
       trim: true,
+    },
+    voterId: {
+      type: String,
+      required: [true, "Voter ID is required"],
+      unique: true,
+      sparse: false,
+      trim: true,
+      uppercase: true,
+    },
+    gender: {
+      type: String,
+      enum: ["male", "female", "other"],
+      required: [true, "Gender is required"],
     },
     dateOfBirth: {
       type: Date,
-      required: [true, "Date of birth is required"],
+      required: false,
     },
     address: {
       type: String,
@@ -44,7 +58,7 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       required: [true, "Password is required"],
-      minlength: 8,
+      minlength: 4,
       select: false,
     },
     role: {
@@ -68,7 +82,11 @@ const userSchema = new mongoose.Schema(
       default: undefined,
     },
     faceImagePath: {
-      type: String, // stored image path or IPFS hash
+      type: String,
+      default: null,
+    },
+    photo: {
+      type: String, // stored filename
       default: null,
     },
     isFaceRegistered: {
