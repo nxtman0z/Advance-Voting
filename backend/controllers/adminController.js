@@ -1,236 +1,228 @@
+/**
+ * adminController.js  –  full rebuild
+ * Handles: dashboard, elections (MongoDB + blockchain), parties/candidates,
+ *          user listing, vote-count sync.
+ */
+
 const User = require("../models/User");
 const Election = require("../models/Election");
-const { ethers } = require("ethers");
-const VotingABI = require("../../smart-contract/artifacts/contracts/Voting.sol/Voting.json");
+const Party = require("../models/Party");
+const {
+  createElectionOnChain,
+  addCandidateOnChain,
+  getResultsOnChain,
+} = require("../utils/blockchainService");
 
-// ─────────────────────────────────────────────
-// @route   GET /api/admin/dashboard
-// @desc    Admin dashboard stats
-// @access  Admin
-// ─────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// DASHBOARD
+// ─────────────────────────────────────────────────────────────────────────────
 exports.getDashboardStats = async (req, res) => {
   try {
-    const [totalUsers, totalElections, activeElections, verifiedUsers] = await Promise.all([
-      User.countDocuments({ role: "voter" }),
-      Election.countDocuments(),
-      Election.countDocuments({ status: "active" }),
-      User.countDocuments({ isVerified: true }),
-    ]);
+    const [totalVoters, totalElections, activeElections, totalParties] =
+      await Promise.all([
+        User.countDocuments({ role: "voter" }),
+        Election.countDocuments(),
+        Election.countDocuments({ status: "active" }),
+        Party.countDocuments(),
+      ]);
+
+    // Aggregate vote counts per election
+    const elections = await Election.find()
+      .sort({ createdAt: -1 })
+      .select("title state status totalVotes onChainId startTime endTime")
+      .lean();
+
+    // Attach parties to each election
+    const electionIds = elections.map((e) => e._id);
+    const parties = await Party.find({ election: { $in: electionIds } })
+      .select("election partyName candidateName voteCount partySymbol")
+      .lean();
+
+    const partiesMap = {};
+    parties.forEach((p) => {
+      const key = p.election.toString();
+      if (!partiesMap[key]) partiesMap[key] = [];
+      partiesMap[key].push(p);
+    });
+
+    const electionsWithParties = elections.map((e) => ({
+      ...e,
+      parties: partiesMap[e._id.toString()] || [],
+    }));
 
     const recentUsers = await User.find({ role: "voter" })
       .sort({ createdAt: -1 })
       .limit(5)
-      .select("fullName email isVerified createdAt");
+      .select("fullName email phone createdAt photo");
 
     res.status(200).json({
       success: true,
       data: {
-        totalUsers,
+        totalVoters,
         totalElections,
         activeElections,
-        verifiedUsers,
+        totalParties,
+        elections: electionsWithParties,
         recentUsers,
       },
     });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
   }
 };
 
-// ─────────────────────────────────────────────
-// @route   GET /api/admin/users
-// @desc    Get all users
-// @access  Admin
-// ─────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// USERS
+// ─────────────────────────────────────────────────────────────────────────────
 exports.getAllUsers = async (req, res) => {
   try {
-    const { page = 1, limit = 20, search = "", isVerified } = req.query;
+    const { page = 1, limit = 20, search = "", gender = "", status = "" } = req.query;
     const query = { role: "voter" };
 
+    // Search by name, email, phone, or voterId
     if (search) {
       query.$or = [
-        { fullName: { $regex: search, $options: "i" } },
-        { email: { $regex: search, $options: "i" } },
-        { nationalId: { $regex: search, $options: "i" } },
+        { fullName:  { $regex: search, $options: "i" } },
+        { email:     { $regex: search, $options: "i" } },
+        { phone:     { $regex: search, $options: "i" } },
+        { voterId:   { $regex: search, $options: "i" } },
       ];
     }
-    if (isVerified !== undefined) query.isVerified = isVerified === "true";
+    // Filter by gender
+    if (gender && ["male", "female", "other"].includes(gender.toLowerCase())) {
+      query.gender = gender.toLowerCase();
+    }
+    // Filter by account status
+    if (status === "active")   query.isActive = true;
+    if (status === "inactive") query.isActive = false;
 
-    const users = await User.find(query)
-      .select("-faceDescriptor -password")
-      .sort({ createdAt: -1 })
-      .skip((page - 1) * limit)
-      .limit(Number(limit));
-
-    const total = await User.countDocuments(query);
-
+    const [users, total] = await Promise.all([
+      User.find(query)
+        .select("-password -faceDescriptor -otp -otpExpires -passwordResetToken -passwordResetExpires")
+        .sort({ createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(Number(limit)),
+      User.countDocuments(query),
+    ]);
     res.status(200).json({
       success: true,
       data: users,
       pagination: { page: Number(page), limit: Number(limit), total, pages: Math.ceil(total / limit) },
     });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
   }
 };
 
-// ─────────────────────────────────────────────
-// @route   POST /api/admin/elections
-// @desc    Create a new election
-// @access  Admin
-// ─────────────────────────────────────────────
-exports.createElection = async (req, res) => {
-  try {
-    const { title, description, electionType, startTime, endTime, candidates } = req.body;
-
-    const election = await Election.create({
-      title,
-      description,
-      electionType,
-      startTime: new Date(startTime),
-      endTime: new Date(endTime),
-      candidates: candidates || [],
-      createdBy: req.user.id,
-      status: "upcoming",
-    });
-
-    res.status(201).json({ success: true, data: election });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-
-// ─────────────────────────────────────────────
-// @route   POST /api/admin/elections/:id/deploy
-// @desc    Deploy election to blockchain
-// @access  Admin
-// ─────────────────────────────────────────────
-exports.deployElectionToBlockchain = async (req, res) => {
-  try {
-    const election = await Election.findById(req.params.id);
-    if (!election) return res.status(404).json({ success: false, message: "Election not found" });
-    if (election.isBlockchainDeployed)
-      return res.status(400).json({ success: false, message: "Already deployed" });
-
-    const provider = new ethers.JsonRpcProvider(process.env.RPC_URL);
-    const signer = new ethers.Wallet(process.env.ADMIN_PRIVATE_KEY, provider);
-    const contract = new ethers.Contract(process.env.CONTRACT_ADDRESS, VotingABI.abi, signer);
-
-    const startTs = Math.floor(new Date(election.startTime).getTime() / 1000);
-    const endTs = Math.floor(new Date(election.endTime).getTime() / 1000);
-
-    const tx = await contract.createElection(election.title, election.description, startTs, endTs);
-    const receipt = await tx.wait();
-
-    // Extract onChainId from events
-    const event = receipt.logs
-      .map((log) => { try { return contract.interface.parseLog(log); } catch { return null; } })
-      .find((e) => e && e.name === "ElectionCreated");
-
-    const onChainId = event ? Number(event.args.electionId) : null;
-
-    // Add candidates on-chain
-    for (const candidate of election.candidates) {
-      const ctx = await contract.addCandidate(onChainId, candidate.name, candidate.party, candidate.imageHash || "");
-      await ctx.wait();
-    }
-
-    election.onChainId = onChainId;
-    election.deployTxHash = receipt.hash;
-    election.isBlockchainDeployed = true;
-    election.contractAddress = process.env.CONTRACT_ADDRESS;
-    await election.save();
-
-    res.status(200).json({
-      success: true,
-      message: "Election deployed to blockchain",
-      data: { onChainId, txHash: receipt.hash },
-    });
-  } catch (error) {
-    console.error("deployElectionToBlockchain error:", error);
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-
-// ─────────────────────────────────────────────
-// @route   POST /api/admin/elections/:id/register-voter
-// @desc    Register voter for an election on the blockchain
-// @access  Admin
-// ─────────────────────────────────────────────
-exports.registerVoterForElection = async (req, res) => {
-  try {
-    const { userId } = req.body;
-    const election = await Election.findById(req.params.id);
-    const user = await User.findById(userId);
-
-    if (!election || !user) return res.status(404).json({ success: false, message: "Not found" });
-
-    if (!user.walletAddress) {
-      return res.status(400).json({ success: false, message: "User has no linked wallet address" });
-    }
-
-    const provider = new ethers.JsonRpcProvider(process.env.RPC_URL);
-    const signer = new ethers.Wallet(process.env.ADMIN_PRIVATE_KEY, provider);
-    const contract = new ethers.Contract(process.env.CONTRACT_ADDRESS, VotingABI.abi, signer);
-
-    const tx = await contract.registerVoter(election.onChainId, user.walletAddress);
-    await tx.wait();
-
-    // Record in MongoDB
-    const alreadyRegistered = election.registeredVoters.some(
-      (rv) => rv.userId.toString() === userId
-    );
-    if (!alreadyRegistered) {
-      election.registeredVoters.push({ userId, walletAddress: user.walletAddress });
-      await election.save();
-    }
-
-    res.status(200).json({ success: true, message: "Voter registered for election on blockchain" });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-
-// ─────────────────────────────────────────────
-// @route   PATCH /api/admin/users/:id/toggle-status
-// @desc    Activate / deactivate a user
-// @access  Admin
-// ─────────────────────────────────────────────
 exports.toggleUserStatus = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
     if (!user) return res.status(404).json({ success: false, message: "User not found" });
-
     user.isActive = !user.isActive;
     await user.save({ validateBeforeSave: false });
-
     res.status(200).json({ success: true, data: { isActive: user.isActive } });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
   }
 };
 
-// ─────────────────────────────────────────────
-// @route   GET /api/admin/elections
-// @desc    Get all elections
-// @access  Admin
-// ─────────────────────────────────────────────
+exports.deleteUser = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ success: false, message: "User not found" });
+    if (user.role === "admin") {
+      return res.status(403).json({ success: false, message: "Cannot delete admin accounts" });
+    }
+    await User.findByIdAndDelete(req.params.id);
+    res.status(200).json({ success: true, message: "Voter deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ELECTIONS
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * POST /api/admin/elections
+ * Creates election in MongoDB AND on-chain in one step.
+ * Body: { title, description, state, startTime, endTime }
+ */
+exports.createElection = async (req, res) => {
+  try {
+    const { title, description, state, startTime, endTime } = req.body;
+    if (!title || !startTime || !endTime) {
+      return res.status(400).json({
+        success: false,
+        message: "title, startTime, endTime are required",
+      });
+    }
+
+    // 1 — Deploy on-chain first
+    const { electionId: onChainId, txHash: deployTxHash } =
+      await createElectionOnChain(title, description || "", startTime, endTime);
+
+    // 2 — Save to MongoDB
+    const election = await Election.create({
+      title,
+      description: description || "",
+      state: state || "National",
+      startTime: new Date(startTime),
+      endTime: new Date(endTime),
+      status: "upcoming",
+      onChainId,
+      isBlockchainDeployed: true,
+      deployTxHash,
+      contractAddress: process.env.CONTRACT_ADDRESS,
+      createdBy: req.user.id,
+    });
+
+    res.status(201).json({
+      success: true,
+      message: "Election created on blockchain and saved",
+      data: election,
+    });
+  } catch (err) {
+    console.error("createElection error:", err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+/**
+ * GET /api/admin/elections
+ */
 exports.getAllElections = async (req, res) => {
   try {
     const elections = await Election.find()
       .populate("createdBy", "fullName")
-      .sort({ createdAt: -1 });
-    res.status(200).json({ success: true, count: elections.length, data: elections });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+      .sort({ createdAt: -1 })
+      .lean();
+
+    // Attach parties
+    const electionIds = elections.map((e) => e._id);
+    const parties = await Party.find({ election: { $in: electionIds } }).lean();
+    const map = {};
+    parties.forEach((p) => {
+      const k = p.election.toString();
+      if (!map[k]) map[k] = [];
+      map[k].push(p);
+    });
+
+    const data = elections.map((e) => ({
+      ...e,
+      parties: map[e._id.toString()] || [],
+    }));
+
+    res.status(200).json({ success: true, count: data.length, data });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
   }
 };
 
-// ─────────────────────────────────────────────
-// @route   PATCH /api/admin/elections/:id/status
-// @desc    Update election status
-// @access  Admin
-// ─────────────────────────────────────────────
+/**
+ * PATCH /api/admin/elections/:id/status
+ */
 exports.updateElectionStatus = async (req, res) => {
   try {
     const { status } = req.body;
@@ -239,9 +231,177 @@ exports.updateElectionStatus = async (req, res) => {
       { status },
       { new: true, runValidators: true }
     );
-    if (!election) return res.status(404).json({ success: false, message: "Election not found" });
+    if (!election)
+      return res.status(404).json({ success: false, message: "Election not found" });
     res.status(200).json({ success: true, data: election });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
   }
+};
+
+/**
+ * DELETE /api/admin/elections/:id
+ */
+exports.deleteElection = async (req, res) => {
+  try {
+    const election = await Election.findByIdAndDelete(req.params.id);
+    if (!election)
+      return res.status(404).json({ success: false, message: "Election not found" });
+    await Party.deleteMany({ election: req.params.id });
+    res.status(200).json({ success: true, message: "Election deleted" });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PARTIES / CANDIDATES
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * POST /api/admin/elections/:id/parties
+ * Adds a party+candidate to an election (MongoDB + blockchain).
+ * Uses multipart/form-data with fields: partyName, candidateName, candidateBio
+ * Files: partySymbol (required), partyImage (optional), candidatePhoto (optional)
+ */
+exports.addParty = async (req, res) => {
+  try {
+    const election = await Election.findById(req.params.id);
+    if (!election)
+      return res.status(404).json({ success: false, message: "Election not found" });
+
+    if (!election.isBlockchainDeployed || election.onChainId == null)
+      return res.status(400).json({
+        success: false,
+        message: "Election must be deployed to blockchain first",
+      });
+
+    const { partyName, candidateName, candidateBio } = req.body;
+    if (!partyName || !candidateName) {
+      return res.status(400).json({
+        success: false,
+        message: "partyName and candidateName are required",
+      });
+    }
+
+    const files = req.files || {};
+    if (!files.partySymbol || !files.partySymbol[0]) {
+      return res.status(400).json({
+        success: false,
+        message: "partySymbol image is required",
+      });
+    }
+
+    const partySymbolFile = files.partySymbol[0].filename;
+    const partyImageFile = files.partyImage ? files.partyImage[0].filename : null;
+    const candidatePhotoFile = files.candidatePhoto ? files.candidatePhoto[0].filename : null;
+
+    // ── Add on-chain ────────────────────────────────────────────────────────
+    const { candidateId: onChainCandidateId, txHash } = await addCandidateOnChain(
+      election.onChainId,
+      candidateName,
+      partyName,
+      partySymbolFile // use filename as imageHash (on-chain stores string)
+    );
+
+    // ── Save to MongoDB ─────────────────────────────────────────────────────
+    const party = await Party.create({
+      election: election._id,
+      onChainElectionId: election.onChainId,
+      onChainCandidateId,
+      partyName,
+      partySymbol: partySymbolFile,
+      partyImage: partyImageFile,
+      candidateName,
+      candidateBio: candidateBio || "",
+      candidatePhoto: candidatePhotoFile,
+    });
+
+    res.status(201).json({
+      success: true,
+      message: `Party "${partyName}" added (on-chain candidateId: ${onChainCandidateId})`,
+      data: party,
+      txHash,
+    });
+  } catch (err) {
+    console.error("addParty error:", err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+/**
+ * GET /api/admin/elections/:id/parties
+ */
+exports.getPartiesForElection = async (req, res) => {
+  try {
+    const parties = await Party.find({ election: req.params.id }).sort({ createdAt: 1 });
+    res.status(200).json({ success: true, count: parties.length, data: parties });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+/**
+ * DELETE /api/admin/elections/:electionId/parties/:partyId
+ */
+exports.deleteParty = async (req, res) => {
+  try {
+    const party = await Party.findByIdAndDelete(req.params.partyId);
+    if (!party)
+      return res.status(404).json({ success: false, message: "Party not found" });
+    res.status(200).json({ success: true, message: "Party removed from DB (blockchain immutable)" });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SYNC VOTE COUNTS from blockchain → MongoDB
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * POST /api/admin/elections/:id/sync-votes
+ * Reads vote counts from blockchain and updates Party.voteCount and Election.totalVotes
+ */
+exports.syncVoteCounts = async (req, res) => {
+  try {
+    const election = await Election.findById(req.params.id);
+    if (!election)
+      return res.status(404).json({ success: false, message: "Election not found" });
+
+    if (!election.isBlockchainDeployed || election.onChainId == null)
+      return res.status(400).json({ success: false, message: "Election not on blockchain" });
+
+    const { candidates, totalVotes } = await getResultsOnChain(election.onChainId);
+
+    // Update each party's vote count
+    const parties = await Party.find({ election: election._id });
+    for (const party of parties) {
+      const chainCandidate = candidates.find(
+        (c) => c.candidateId === party.onChainCandidateId
+      );
+      if (chainCandidate) {
+        party.voteCount = chainCandidate.voteCount;
+        await party.save();
+      }
+    }
+
+    election.totalVotes = totalVotes;
+    await election.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Vote counts synced from blockchain",
+      data: { totalVotes, candidates },
+    });
+  } catch (err) {
+    console.error("syncVoteCounts error:", err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// Legacy export kept for backward-compat
+exports.deployElectionToBlockchain = exports.createElection;
+exports.registerVoterForElection = async (req, res) => {
+  res.status(410).json({ success: false, message: "Use new castVote flow — voter wallets are automated" });
 };

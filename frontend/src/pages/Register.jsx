@@ -1,192 +1,315 @@
-import { useState } from "react";
+﻿import { useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import FaceCapture from "../components/FaceCapture";
-import OTPInput from "../components/OTPInput";
-import { FiUser, FiMail, FiPhone, FiLock, FiCreditCard, FiCalendar, FiCheckCircle } from "react-icons/fi";
+import {
+  FiUser, FiMail, FiPhone, FiCamera, FiCheckCircle,
+  FiArrowRight, FiLock, FiEye, FiEyeOff, FiCreditCard,
+} from "react-icons/fi";
+import { SiEthereum } from "react-icons/si";
 
-const steps = ["Account", "Identity", "Face", "Verify"];
+// ─── Reusable text-input component ───────────────────────────────────────────
+function InputField({ icon: Icon, label, type = "text", placeholder, value, onChange, rightSlot, hint }) {
+  return (
+    <div className="group">
+      <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
+        {label} <span className="text-red-400">*</span>
+      </label>
+      <div className="relative">
+        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-blue-400 transition-colors">
+          <Icon size={14} />
+        </div>
+        <input
+          type={type}
+          className="w-full bg-slate-900/60 border border-slate-700 text-white placeholder-slate-600
+                     rounded-xl pl-9 pr-9 py-2.5 text-sm
+                     focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500
+                     hover:border-slate-500 transition-all duration-200"
+          placeholder={placeholder}
+          value={value}
+          onChange={onChange}
+          required
+        />
+        {rightSlot && (
+          <div className="absolute right-3.5 top-1/2 -translate-y-1/2">{rightSlot}</div>
+        )}
+      </div>
+      {hint && <p className="text-slate-600 text-xs mt-1 pl-1">{hint}</p>}
+    </div>
+  );
+}
 
+// ─── Gender selector ─────────────────────────────────────────────────────────
+function GenderField({ value, onChange }) {
+  const opts = [
+    { val: "male",   label: "Male",   icon: "♂" },
+    { val: "female", label: "Female", icon: "♀" },
+    { val: "other",  label: "Other",  icon: "⚧" },
+  ];
+  return (
+    <div>
+      <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
+        Gender <span className="text-red-400">*</span>
+      </label>
+      <div className="grid grid-cols-3 gap-2">
+        {opts.map((o) => (
+          <button
+            key={o.val}
+            type="button"
+            onClick={() => onChange(o.val)}
+            className={`py-2.5 rounded-xl border text-sm font-medium transition-all flex items-center justify-center gap-1.5
+              ${value === o.val
+                ? "bg-blue-600/20 border-blue-500 text-blue-300"
+                : "bg-slate-900/60 border-slate-700 text-slate-400 hover:border-slate-500 hover:text-white"
+              }`}
+          >
+            <span className="text-base">{o.icon}</span> {o.label}
+          </button>
+        ))}
+      </div>
+      {!value && (
+        <p className="text-slate-600 text-xs mt-1 pl-1">Select one option above</p>
+      )}
+    </div>
+  );
+}
+
+// ─── Main Component ───────────────────────────────────────────────────────────
 export default function Register() {
-  const { register, verifyAccount, registerFace } = useAuth();
-  const navigate = useNavigate();
+  const { register } = useAuth();
+  const navigate      = useNavigate();
+  const photoInputRef = useRef(null);
 
-  const [step, setStep]           = useState(0);
-  const [loading, setLoading]     = useState(false);
-  const [error, setError]         = useState("");
-  const [faceDesc, setFaceDesc]   = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError]     = useState("");
+  const [done, setDone]       = useState(false);
+  const [showPwd,  setShowPwd]  = useState(false);
+  const [showCpwd, setShowCpwd] = useState(false);
 
   const [form, setForm] = useState({
     fullName: "", email: "", phone: "",
-    nationalId: "", dateOfBirth: "", password: "",
-    confirmPassword: "", walletAddress: "",
+    voterId: "", gender: "",
+    password: "", confirmPassword: "",
   });
+  const [photo,   setPhoto]   = useState(null);
+  const [preview, setPreview] = useState(null);
 
-  const update = (field, val) => setForm((prev) => ({ ...prev, [field]: val }));
+  const update = (field) => (e) => setForm((p) => ({ ...p, [field]: e.target.value }));
 
-  // ─── Step 0: Account Info ─────────────────────────────────────────────
-  const handleAccountStep = async () => {
-    if (form.password !== form.confirmPassword) {
-      setError("Passwords do not match"); return;
+  const handlePhoto = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { setError("Photo must be under 5 MB."); return; }
+    setPhoto(file);
+    const reader = new FileReader();
+    reader.onload = () => setPreview(reader.result);
+    reader.readAsDataURL(file);
+  };
+
+  const handleSubmit = async () => {
+    const { fullName, email, phone, voterId, gender, password, confirmPassword } = form;
+    if (!fullName || !email || !phone || !voterId || !gender || !password || !confirmPassword) {
+      setError("All fields are required."); return;
     }
-    if (form.password.length < 8) {
-      setError("Password must be at least 8 characters"); return;
-    }
+    if (!photo) { setError("Please upload a profile photo."); return; }
+    if (password.length < 6) { setError("Password must be at least 6 characters."); return; }
+    if (password !== confirmPassword) { setError("Passwords do not match."); return; }
+
     setError("");
     setLoading(true);
     try {
-      await register(form);
-      setStep(1);
+      const fd = new FormData();
+      fd.append("fullName",  fullName);
+      fd.append("email",     email);
+      fd.append("phone",     phone);
+      fd.append("voterId",   voterId);
+      fd.append("gender",    gender);
+      fd.append("password",  password);
+      fd.append("photo",     photo);
+      await register(fd);
+      setDone(true);
     } catch (err) {
-      setError(err.response?.data?.message || "Registration failed");
+      setError(err.response?.data?.message || "Registration failed. Please try again.");
     } finally { setLoading(false); }
   };
 
-  // ─── Step 1: OTP Verification ─────────────────────────────────────────
-  const handleOTPComplete = async (otp) => {
-    setLoading(true);
-    try {
-      await verifyAccount(otp);
-      setStep(2);
-    } catch (err) {
-      setError(err.response?.data?.message || "OTP verification failed");
-    } finally { setLoading(false); }
-  };
-
-  // ─── Step 2: Face Capture ─────────────────────────────────────────────
-  const handleFaceCapture = async (descriptor) => {
-    setFaceDesc(descriptor);
-    setLoading(true);
-    try {
-      await registerFace(descriptor);
-      setStep(3);
-    } catch (err) {
-      setError(err.response?.data?.message || "Face registration failed");
-    } finally { setLoading(false); }
-  };
-
-  const InputField = ({ icon: Icon, label, name, type = "text", placeholder, required }) => (
-    <div>
-      <label className="block text-sm text-slate-300 mb-1">{label}</label>
-      <div className="relative">
-        <Icon className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-        <input
-          type={type}
-          className="input-field pl-10"
-          placeholder={placeholder}
-          value={form[name]}
-          onChange={(e) => update(name, e.target.value)}
-          required={required}
-        />
-      </div>
-    </div>
-  );
-
-  return (
-    <div className="max-w-lg mx-auto px-4 py-10">
-      {/* Progress */}
-      <div className="flex items-center justify-between mb-8">
-        {steps.map((s, i) => (
-          <div key={s} className="flex items-center">
-            <div className={`flex items-center gap-2 ${i <= step ? "text-blue-400" : "text-slate-600"}`}>
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold border-2 transition-colors ${
-                i < step  ? "border-blue-500 bg-blue-600" :
-                i === step ? "border-blue-500 text-white" :
-                "border-slate-600"
-              }`}>
-                {i < step ? <FiCheckCircle size={14} /> : i + 1}
+  /* ── Success Screen ──────────────────────────────────────────────────────── */
+  if (done) {
+    return (
+      <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4">
+        <div className="w-full max-w-md">
+          <div className="bg-slate-900/80 backdrop-blur-xl border border-slate-700/60 rounded-2xl p-10 text-center shadow-2xl">
+            <div className="relative w-24 h-24 mx-auto mb-6">
+              <div className="absolute inset-0 bg-green-500/20 rounded-full animate-ping" />
+              <div className="relative w-24 h-24 bg-gradient-to-br from-green-500/30 to-emerald-500/20 rounded-full
+                              flex items-center justify-center border border-green-500/30">
+                <FiCheckCircle size={42} className="text-green-400" />
               </div>
-              <span className="text-xs hidden sm:block">{s}</span>
             </div>
-            {i < steps.length - 1 && (
-              <div className={`h-0.5 w-8 sm:w-16 mx-1 ${i < step ? "bg-blue-500" : "bg-slate-700"}`} />
-            )}
-          </div>
-        ))}
-      </div>
-
-      <div className="card p-8 animate-fadeInUp">
-        <h1 className="text-2xl font-bold text-white mb-1">
-          {step === 0 && "Create Account"}
-          {step === 1 && "Verify Identity"}
-          {step === 2 && "Register Face"}
-          {step === 3 && "All Done!"}
-        </h1>
-        <p className="text-slate-400 text-sm mb-6">
-          {step === 0 && "Fill in your personal information"}
-          {step === 1 && "Enter the OTP sent to your email and phone"}
-          {step === 2 && "Capture your face for biometric authentication"}
-          {step === 3 && "Your account is fully set up"}
-        </p>
-
-        {error && (
-          <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm px-4 py-3 rounded-lg mb-4">
-            {error}
-          </div>
-        )}
-
-        {/* ─── Step 0: Account Info ─── */}
-        {step === 0 && (
-          <div className="space-y-4">
-            <InputField icon={FiUser}     label="Full Name"      name="fullName"       placeholder="John Doe"         required />
-            <InputField icon={FiMail}     label="Email"          name="email"          type="email" placeholder="john@example.com" required />
-            <InputField icon={FiPhone}    label="Phone Number"   name="phone"          placeholder="+1234567890"      required />
-            <InputField icon={FiCreditCard} label="National ID"  name="nationalId"     placeholder="A12345678"        required />
-            <InputField icon={FiCalendar} label="Date of Birth"  name="dateOfBirth"    type="date"                    required />
-            <InputField icon={FiLock}     label="Password"       name="password"       type="password" placeholder="Min 8 chars" required />
-            <InputField icon={FiLock}     label="Confirm Password" name="confirmPassword" type="password" placeholder="Repeat password" required />
-            <button onClick={handleAccountStep} disabled={loading} className="btn-primary w-full mt-2">
-              {loading ? "Registering..." : "Continue"}
-            </button>
-          </div>
-        )}
-
-        {/* ─── Step 1: OTP ─── */}
-        {step === 1 && (
-          <div className="space-y-6">
-            <p className="text-sm text-slate-400 text-center">
-              A 6-digit OTP was sent to <span className="text-white font-medium">{form.email}</span>
+            <h2 className="text-3xl font-bold text-white mb-2">Registered!</h2>
+            <p className="text-slate-400 mb-8">
+              Your voter account is ready.<br />You can now log in with your credentials.
             </p>
-            <OTPInput
-              onComplete={handleOTPComplete}
-              onResend={() => {}}
-              loading={loading}
-            />
-            {loading && <p className="text-center text-blue-400 text-sm">Verifying...</p>}
-          </div>
-        )}
-
-        {/* ─── Step 2: Face ─── */}
-        {step === 2 && (
-          <div>
-            <FaceCapture onDescriptorCapture={handleFaceCapture} mode="register" />
-            {loading && <p className="text-center text-blue-400 text-sm mt-4">Saving face data...</p>}
-          </div>
-        )}
-
-        {/* ─── Step 3: Done ─── */}
-        {step === 3 && (
-          <div className="text-center space-y-6">
-            <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto">
-              <FiCheckCircle size={40} className="text-green-400" />
-            </div>
-            <div>
-              <h2 className="text-xl font-bold text-white">Registration Complete!</h2>
-              <p className="text-slate-400 mt-2">Your account is verified and face is registered. You can now vote.</p>
-            </div>
-            <button onClick={() => navigate("/vote")} className="btn-primary w-full">
-              Go to Vote
+            <button
+              onClick={() => navigate("/login")}
+              className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-cyan-500
+                         text-white font-semibold py-3 rounded-xl transition-all duration-200
+                         flex items-center justify-center gap-2 shadow-lg shadow-blue-600/30"
+            >
+              Go to Login <FiArrowRight size={16} />
             </button>
           </div>
-        )}
+        </div>
+      </div>
+    );
+  }
 
-        {step === 0 && (
-          <p className="text-center text-slate-400 text-sm mt-4">
-            Already have an account?{" "}
-            <Link to="/login" className="text-blue-400 hover:underline">Sign in</Link>
-          </p>
-        )}
+  /* ── Registration Form ───────────────────────────────────────────────────── */
+  return (
+    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4 py-10">
+      <div className="w-full max-w-lg">
+
+        {/* Header */}
+        <div className="text-center mb-6">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl
+                          bg-gradient-to-br from-blue-600 to-blue-700 shadow-xl shadow-blue-600/40 mb-4">
+            <SiEthereum size={26} className="text-white" />
+          </div>
+          <h1 className="text-3xl font-bold text-white">Voter Registration</h1>
+          <p className="text-slate-400 mt-1 text-sm">Create your secure blockchain voting identity</p>
+        </div>
+
+        {/* Card */}
+        <div className="bg-slate-900/70 backdrop-blur-xl border border-slate-700/60 rounded-2xl shadow-2xl overflow-hidden">
+          <div className="h-1 bg-gradient-to-r from-blue-600 via-cyan-500 to-blue-600" />
+
+          <div className="p-7 space-y-5">
+
+            {/* Error banner */}
+            {error && (
+              <div className="flex items-start gap-2.5 bg-red-500/10 border border-red-500/30 text-red-400 text-sm px-4 py-3 rounded-xl">
+                <span className="mt-0.5 flex-shrink-0">⚠</span>
+                <span>{error}</span>
+              </div>
+            )}
+
+            {/* ── Section: Photo Upload ──────────────────────────────── */}
+            <div>
+              <SectionDivider label="Profile Photo" />
+              <div className="flex flex-col items-center gap-2 mt-3">
+                <button
+                  type="button"
+                  onClick={() => photoInputRef.current?.click()}
+                  className={`relative w-28 h-28 rounded-full overflow-hidden transition-all duration-200 group cursor-pointer bg-slate-800
+                    ${photo ? "ring-2 ring-blue-500" : "ring-2 ring-dashed ring-slate-600 hover:ring-blue-500"}`}
+                >
+                  {preview ? (
+                    <img src={preview} alt="preview" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="flex flex-col items-center justify-center w-full h-full gap-1">
+                      <FiCamera size={28} className="text-slate-500 group-hover:text-blue-400 transition-colors" />
+                      <span className="text-[10px] text-slate-600 group-hover:text-slate-400 font-medium">CLICK TO ADD</span>
+                    </div>
+                  )}
+                  {preview && (
+                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <FiCamera size={22} className="text-white" />
+                    </div>
+                  )}
+                </button>
+                <p className="text-xs text-slate-500">
+                  {photo
+                    ? <span className="text-blue-400 font-medium">{photo.name}</span>
+                    : <span>JPG / PNG · max 5 MB <span className="text-red-400">*</span></span>
+                  }
+                </p>
+                <input ref={photoInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhoto} />
+              </div>
+            </div>
+
+            {/* ── Section: Personal Info ─────────────────────────────── */}
+            <div className="space-y-4">
+              <SectionDivider label="Personal Info" />
+              <InputField
+                icon={FiUser} label="Full Name" placeholder="Enter your full name"
+                value={form.fullName} onChange={update("fullName")}
+              />
+              <InputField
+                icon={FiMail} label="Email Address" type="email" placeholder="your@email.com"
+                value={form.email} onChange={update("email")}
+              />
+              <InputField
+                icon={FiPhone} label="Phone Number" placeholder="+91 99999 99999"
+                value={form.phone} onChange={update("phone")}
+              />
+              <InputField
+                icon={FiCreditCard} label="Voter ID" placeholder="e.g. VTR-2024-000123"
+                value={form.voterId} onChange={update("voterId")}
+                hint="Government-issued voter identification number"
+              />
+              <GenderField value={form.gender} onChange={(g) => setForm((p) => ({ ...p, gender: g }))} />
+            </div>
+
+            {/* ── Section: Security ──────────────────────────────────── */}
+            <div className="space-y-4">
+              <SectionDivider label="Security" />
+              <InputField
+                icon={FiLock} label="Password" type={showPwd ? "text" : "password"}
+                placeholder="Min. 6 characters" value={form.password} onChange={update("password")}
+                rightSlot={
+                  <button type="button" onClick={() => setShowPwd(!showPwd)} className="text-slate-500 hover:text-slate-300 transition-colors">
+                    {showPwd ? <FiEyeOff size={15} /> : <FiEye size={15} />}
+                  </button>
+                }
+              />
+              <InputField
+                icon={FiLock} label="Confirm Password" type={showCpwd ? "text" : "password"}
+                placeholder="Re-enter password" value={form.confirmPassword} onChange={update("confirmPassword")}
+                rightSlot={
+                  <button type="button" onClick={() => setShowCpwd(!showCpwd)} className="text-slate-500 hover:text-slate-300 transition-colors">
+                    {showCpwd ? <FiEyeOff size={15} /> : <FiEye size={15} />}
+                  </button>
+                }
+              />
+            </div>
+
+            {/* ── Submit ─────────────────────────────────────────────── */}
+            <button
+              onClick={handleSubmit}
+              disabled={loading}
+              className="w-full bg-gradient-to-r from-blue-600 to-blue-500
+                         hover:from-blue-500 hover:to-cyan-500
+                         disabled:opacity-50 disabled:cursor-not-allowed
+                         text-white font-semibold py-3.5 rounded-xl
+                         transition-all duration-200 shadow-lg shadow-blue-600/25
+                         flex items-center justify-center gap-2 mt-2"
+            >
+              {loading ? (
+                <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Creating Account...</>
+              ) : (
+                <>Register as Voter <FiArrowRight size={16} /></>
+              )}
+            </button>
+
+            <p className="text-center text-slate-500 text-sm pt-1">
+              Already registered?{" "}
+              <Link to="/login" className="text-blue-400 hover:text-blue-300 font-medium transition-colors">Sign in</Link>
+            </p>
+          </div>
+        </div>
+
       </div>
     </div>
   );
 }
+
+function SectionDivider({ label }) {
+  return (
+    <div className="flex items-center gap-3">
+      <div className="flex-1 h-px bg-slate-700/60" />
+      <span className="text-slate-500 text-xs font-semibold uppercase tracking-wider">{label}</span>
+      <div className="flex-1 h-px bg-slate-700/60" />
+    </div>
+  );
+}
+
+

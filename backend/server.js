@@ -5,6 +5,7 @@ const helmet = require("helmet");
 const morgan = require("morgan");
 const rateLimit = require("express-rate-limit");
 const cookieParser = require("cookie-parser");
+const path = require("path");
 require("dotenv").config();
 
 const connectDB = require("./config/db");
@@ -21,7 +22,23 @@ connectDB();
 app.use(helmet());
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+    origin: (origin, callback) => {
+      // Allow any localhost port in development, or the configured FRONTEND_URL
+      const allowed = [
+        process.env.FRONTEND_URL,
+        "http://localhost:5173",
+        "http://localhost:5174",
+        "http://localhost:5175",
+        "http://localhost:5176",
+        "http://localhost:4173",
+      ].filter(Boolean);
+      if (!origin || allowed.includes(origin)) return callback(null, true);
+      // Also allow any localhost:* in development
+      if (process.env.NODE_ENV === "development" && /^http:\/\/localhost:\d+$/.test(origin)) {
+        return callback(null, true);
+      }
+      callback(new Error("Not allowed by CORS"));
+    },
     credentials: true,
     methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -31,20 +48,14 @@ app.use(
 // ─── Rate Limiting ────────────────────────────────────────────────────────────
 const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100,
+  max: 500,
   message: { success: false, message: "Too many requests. Please try again later." },
 });
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 10,
+  max: 50,
   message: { success: false, message: "Too many auth attempts. Please try again later." },
-});
-
-const voteLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  max: 5,
-  message: { success: false, message: "Too many vote attempts." },
 });
 
 // ─── General Middleware ───────────────────────────────────────────────────────
@@ -56,9 +67,17 @@ if (process.env.NODE_ENV === "development") {
   app.use(morgan("dev"));
 }
 
+// ─── Static Files (uploaded images) ──────────────────────────────────────────
+// Set Cross-Origin-Resource-Policy: cross-origin so the frontend (port 5173)
+// can load images served by the backend (port 5000) — helmet sets same-origin by default.
+app.use("/uploads", (req, res, next) => {
+  res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+  next();
+}, express.static(path.join(__dirname, "uploads")));
+
 // ─── Routes ───────────────────────────────────────────────────────────────────
 app.use("/api/auth", authLimiter, authRoutes);
-app.use("/api/vote", voteLimiter, voteRoutes);
+app.use("/api/vote", generalLimiter, voteRoutes);
 app.use("/api/admin", generalLimiter, adminRoutes);
 
 // ─── Health Check ─────────────────────────────────────────────────────────────

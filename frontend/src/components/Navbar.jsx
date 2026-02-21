@@ -1,13 +1,10 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { useWeb3 } from "../context/Web3Context";
 import { useState } from "react";
-import { FiMenu, FiX, FiUser, FiLogOut, FiSettings } from "react-icons/fi";
-import { SiEthereum } from "react-icons/si";
+import { FiMenu, FiX, FiUser, FiLogOut } from "react-icons/fi";
 
 export default function Navbar() {
   const { user, logout } = useAuth();
-  const { account, connectWallet, disconnectWallet, isConnecting, formatAddress } = useWeb3();
   const navigate = useNavigate();
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -15,8 +12,9 @@ export default function Navbar() {
 
   const navLinks = [
     { label: "Home", path: "/" },
-    { label: "Vote", path: "/vote", protected: true },
+    { label: "Vote", path: "/vote", protected: true, voterOnly: true },
     { label: "Results", path: "/results" },
+    { label: "Dashboard", path: "/dashboard", protected: true },
     ...(user?.role === "admin" ? [{ label: "Admin", path: "/admin" }] : []),
   ];
 
@@ -45,7 +43,7 @@ export default function Navbar() {
           {/* ─── Desktop Nav Links ────────────────────────────────── */}
           <div className="hidden md:flex items-center gap-1">
             {navLinks.map((link) => (
-              (!link.protected || user) && (
+              (!link.protected || user) && (!link.voterOnly || user?.role !== "admin") && (
                 <Link
                   key={link.path}
                   to={link.path}
@@ -63,20 +61,6 @@ export default function Navbar() {
 
           {/* ─── Right Side ───────────────────────────────────────── */}
           <div className="hidden md:flex items-center gap-3">
-            {/* MetaMask Connect */}
-            <button
-              onClick={account ? disconnectWallet : connectWallet}
-              disabled={isConnecting}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                account
-                  ? "bg-green-500/10 border border-green-500/30 text-green-400 hover:bg-green-500/20"
-                  : "bg-blue-600/10 border border-blue-500/30 text-blue-400 hover:bg-blue-600/20"
-              }`}
-            >
-              <SiEthereum className="text-base" />
-              {isConnecting ? "Connecting..." : account ? formatAddress(account) : "Connect Wallet"}
-            </button>
-
             {/* User Menu */}
             {user ? (
               <div className="relative">
@@ -102,9 +86,9 @@ export default function Navbar() {
                     </div>
                     <button
                       className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 rounded-lg transition-colors"
-                      onClick={() => { setDropdownOpen(false); navigate("/"); }}
+                      onClick={() => { setDropdownOpen(false); navigate("/dashboard"); }}
                     >
-                      <FiUser /> Profile
+                      <FiUser /> Dashboard
                     </button>
                     <button
                       className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
@@ -137,7 +121,7 @@ export default function Navbar() {
       {menuOpen && (
         <div className="md:hidden bg-slate-900 border-t border-slate-700 px-4 py-4 space-y-2 animate-fadeInUp">
           {navLinks.map((link) => (
-            (!link.protected || user) && (
+            (!link.protected || user) && (!link.voterOnly || user?.role !== "admin") && (
               <Link
                 key={link.path}
                 to={link.path}

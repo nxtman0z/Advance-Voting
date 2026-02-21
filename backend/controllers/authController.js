@@ -24,51 +24,60 @@ const cookieOptions = {
 // ─────────────────────────────────────────────
 exports.register = async (req, res) => {
   try {
-    const { fullName, email, phone, nationalId, dateOfBirth, password, walletAddress } = req.body;
+    const { fullName, email, phone, password, gender, voterId } = req.body;
+    const photoFile = req.file; // from multer
+
+    if (!fullName || !email || !phone || !password || !gender || !voterId) {
+      return res.status(400).json({ success: false, message: "All fields are required (fullName, email, phone, password, gender, voterId)" });
+    }
+    if (!photoFile) {
+      return res.status(400).json({ success: false, message: "Profile photo is required" });
+    }
+    if (password.length < 6) {
+      return res.status(400).json({ success: false, message: "Password must be at least 6 characters" });
+    }
+    if (!["male", "female", "other"].includes(gender.toLowerCase())) {
+      return res.status(400).json({ success: false, message: "Gender must be male, female, or other" });
+    }
 
     // Check duplicates
     const existing = await User.findOne({
-      $or: [{ email }, { phone }, { nationalId }],
+      $or: [{ email }, { phone }, { voterId: voterId.toUpperCase() }],
     });
     if (existing) {
-      return res.status(400).json({
-        success: false,
-        message: "A user with this email, phone, or national ID already exists",
-      });
+      let msg = "A user with this email or phone already exists";
+      if (existing.voterId === voterId.toUpperCase()) msg = "This Voter ID is already registered";
+      return res.status(400).json({ success: false, message: msg });
     }
 
     const user = await User.create({
       fullName,
       email,
       phone,
-      nationalId,
-      dateOfBirth,
       password,
-      walletAddress: walletAddress ? walletAddress.toLowerCase() : undefined,
+      gender: gender.toLowerCase(),
+      voterId: voterId.toUpperCase(),
+      role: "voter",   // always voter — admin is seeded separately
+      isVerified: true,
+      photo: photoFile.filename,
     });
-
-    // Send OTP for email/phone verification
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const otpHash = crypto.createHash("sha256").update(otp).digest("hex");
-    user.otp = otpHash;
-    user.otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
-    await user.save({ validateBeforeSave: false });
-
-    await sendOTP(user.email, user.phone, otp, "verification");
 
     const token = generateToken(user._id, user.role);
     res.cookie("token", token, cookieOptions);
 
     res.status(201).json({
       success: true,
-      message: "Registration successful. Please verify your account with the OTP sent.",
+      message: "Registration successful!",
       data: {
         _id: user._id,
         fullName: user.fullName,
         email: user.email,
         phone: user.phone,
+        gender: user.gender,
+        voterId: user.voterId,
         role: user.role,
         isVerified: user.isVerified,
+        photo: user.photo,
       },
       token,
     });
@@ -91,8 +100,18 @@ exports.login = async (req, res) => {
       return res.status(400).json({ success: false, message: "Email and password are required" });
     }
 
-    const user = await User.findOne({ email }).select("+password");
-    if (!user || !(await user.comparePassword(password))) {
+    const emailClean    = email.toLowerCase().trim();
+    const passwordClean = password.trim();
+
+    const user = await User.findOne({ email: emailClean }).select("+password");
+    console.log("[LOGIN DEBUG] email:", emailClean, "| user found:", !!user);
+    if (user) {
+      const match = await user.comparePassword(passwordClean);
+      console.log("[LOGIN DEBUG] password match:", match);
+      if (!match) {
+        return res.status(401).json({ success: false, message: "Invalid email or password" });
+      }
+    } else {
       return res.status(401).json({ success: false, message: "Invalid email or password" });
     }
 
@@ -114,6 +133,9 @@ exports.login = async (req, res) => {
         fullName: user.fullName,
         email: user.email,
         phone: user.phone,
+        gender: user.gender,
+        voterId: user.voterId,
+        photo: user.photo,
         role: user.role,
         isVerified: user.isVerified,
         isFaceRegistered: user.isFaceRegistered,
@@ -123,6 +145,64 @@ exports.login = async (req, res) => {
     });
   } catch (error) {
     console.error("Login error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ─────────────────────────────────────────────
+// @route   POST /api/auth/admin-wallet-login
+// @desc    Admin login via MetaMask wallet signature
+// @access  Public
+// ─────────────────────────────────────────────
+exports.adminWalletLogin = async (req, res) => {
+  try {
+    const { address, signature, message } = req.body;
+
+    if (!address || !signature || !message) {
+      return res.status(400).json({ success: false, message: "address, signature and message are required" });
+    }
+
+    // Recover signer from signature
+    const { ethers } = require("ethers");
+    const recoveredAddress = ethers.verifyMessage(message, signature);
+
+    if (recoveredAddress.toLowerCase() !== address.toLowerCase()) {
+      return res.status(401).json({ success: false, message: "Signature verification failed" });
+    }
+
+    // Check against admin wallet from .env
+    const adminWallet = process.env.ADMIN_WALLET_ADDRESS;
+    if (!adminWallet) {
+      return res.status(500).json({ success: false, message: "Admin wallet not configured on server" });
+    }
+
+    if (recoveredAddress.toLowerCase() !== adminWallet.toLowerCase()) {
+      return res.status(403).json({ success: false, message: "This wallet is not authorized as admin" });
+    }
+
+    // Find admin user in DB
+    const admin = await User.findOne({ role: "admin" });
+    if (!admin) {
+      return res.status(404).json({ success: false, message: "Admin account not found. Run seed script." });
+    }
+
+    const token = generateToken(admin._id, "admin");
+    res.cookie("token", token, cookieOptions);
+
+    res.status(200).json({
+      success: true,
+      message: "Admin wallet verified. Welcome!",
+      data: {
+        _id: admin._id,
+        fullName: admin.fullName,
+        email: admin.email,
+        role: "admin",
+        walletAddress: recoveredAddress,
+      },
+      token,
+    });
+  } catch (error) {
+    console.error("adminWalletLogin error:", error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -181,6 +261,47 @@ exports.verifyAccount = async (req, res) => {
     await user.save({ validateBeforeSave: false });
 
     res.status(200).json({ success: true, message: "Account verified successfully" });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ─────────────────────────────────────────────
+// @route   POST /api/auth/verify-face
+// @desc    Verify submitted face descriptor against stored one
+// @access  Private
+// ─────────────────────────────────────────────
+exports.verifyFace = async (req, res) => {
+  try {
+    const { faceDescriptor } = req.body;
+    if (!faceDescriptor || !Array.isArray(faceDescriptor)) {
+      return res.status(400).json({ success: false, message: "Face descriptor is required" });
+    }
+
+    const user = await User.findById(req.user.id).select("+faceDescriptor");
+    if (!user || !user.faceDescriptor || user.faceDescriptor.length !== 128) {
+      return res.status(400).json({ success: false, message: "No registered face found. Please register your face first." });
+    }
+
+    // Euclidean distance
+    const stored = user.faceDescriptor;
+    const incoming = faceDescriptor;
+    let sum = 0;
+    for (let i = 0; i < 128; i++) {
+      sum += Math.pow(stored[i] - incoming[i], 2);
+    }
+    const distance = Math.sqrt(sum);
+    const threshold = parseFloat(process.env.FACE_MATCH_THRESHOLD) || 0.5;
+
+    if (distance > threshold) {
+      return res.status(401).json({
+        success: false,
+        message: "Face verification failed. Please try again.",
+        distance,
+      });
+    }
+
+    res.status(200).json({ success: true, message: "Face verified successfully", distance });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

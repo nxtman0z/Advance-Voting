@@ -1,36 +1,42 @@
 const express = require("express");
 const router = express.Router();
+const rateLimit = require("express-rate-limit");
 const voteController = require("../controllers/voteController");
 const otpController = require("../controllers/otpController");
-const { protect, requireVerified, requireFaceRegistered } = require("../middleware/authMiddleware");
-const { verifyFace } = require("../middleware/faceVerifyMiddleware");
+const { protect } = require("../middleware/authMiddleware");
 
-// All vote routes require authentication and verified account
+// Strict limiter only on the cast endpoint (10 attempts / hour per IP)
+const castLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 10,
+  message: { success: false, message: "Too many vote attempts. Please try again later." },
+});
+
+// All vote routes require authentication
 router.use(protect);
-router.use(requireVerified);
 
-// ─── Elections ─────────────────────────────────────────────────────────────────
+// ─── Elections with parties ────────────────────────────────────────────────────
 router.get("/elections", voteController.getActiveElections);
-router.get("/elections/:id", voteController.getElectionById);
 
-// ─── Voting ────────────────────────────────────────────────────────────────────
-// Cast vote requires: verified + face registered + OTP verified + face check
-router.post(
-  "/cast",
-  requireFaceRegistered,
-  verifyFace,
-  voteController.castVote
-);
-
-// ─── Voter History ─────────────────────────────────────────────────────────────
-router.get("/my-votes", voteController.getMyVotes);
-
-// ─── Results (public-ish, still auth protected) ────────────────────────────────
-router.get("/results/:electionId", voteController.getResults);
-
-// ─── OTP ───────────────────────────────────────────────────────────────────────
+// ─── OTP (send before voting, verify before cast) ─────────────────────────────
 router.post("/otp/send", otpController.sendOtp);
 router.post("/otp/verify", otpController.verifyOtp);
 router.get("/otp/status", otpController.getOtpStatus);
+
+// ─── Pre-register + pre-fund voter wallet (fire-and-forget, call on page load) ─
+router.post("/prepare", voteController.prepareVoter);
+
+// ─── Cast vote (face verified on frontend, OTP verified in DB) ──────────────────
+// Body: { electionId, partyId }
+router.post("/cast", castLimiter, voteController.castVote);
+
+// ─── Voter history / dashboard ─────────────────────────────────────────────────
+router.get("/my-votes", voteController.getMyVotes);
+
+// ─── Voter blockchain status for an election ───────────────────────────────────
+router.get("/status/:electionMongoId", voteController.getVoterStatus);
+
+// ─── Results (all elections with parties + vote counts) ──────────────────────
+router.get("/results", voteController.getResults);
 
 module.exports = router;
