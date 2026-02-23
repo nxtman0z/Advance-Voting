@@ -1,5 +1,5 @@
 const nodemailer = require("nodemailer");
-const twilio = require("twilio");
+const axios = require("axios");
 
 // ─── Email transporter (lazy init) ───────────────────────────────────────────
 let _transporter = null;
@@ -18,17 +18,12 @@ function getTransporter() {
   return _transporter;
 }
 
-// ─── Twilio Client ────────────────────────────────────────────────────────────
-let twilioClient = null;
-const sid = process.env.TWILIO_ACCOUNT_SID || "";
-if (sid.startsWith("AC") && process.env.TWILIO_AUTH_TOKEN) {
-  try {
-    twilioClient = twilio(sid, process.env.TWILIO_AUTH_TOKEN);
-  } catch (e) {
-    console.warn("⚠️  Twilio init failed (SMS disabled):", e.message);
-  }
+// ─── Fast2SMS Client ─────────────────────────────────────────────────────────
+const fast2smsKey = process.env.FAST2SMS_API_KEY || "";
+if (!fast2smsKey || fast2smsKey === "your_fast2sms_api_key") {
+  console.warn("⚠️  Fast2SMS not configured — SMS OTP disabled. Set FAST2SMS_API_KEY in .env");
 } else {
-  console.warn("⚠️  Twilio not configured — SMS OTP disabled. Set TWILIO_ACCOUNT_SID in .env");
+  console.log("📱 Fast2SMS configured — SMS OTP enabled.");
 }
 
 // ─────────────────────────────────────────────
@@ -66,17 +61,32 @@ exports.sendOTP = async (email, phone, otp, purpose = "voting", via = "both") =>
     console.log(`✉️  OTP email sent to ${email}  [${info.response}]`);
   }
 
-  // ─── SMS via Twilio ────────────────────────────────────────────────────
+  // ─── SMS via Fast2SMS ─────────────────────────────────────────────────────
   if (sendSms && phone) {
-    if (!twilioClient) {
+    if (!fast2smsKey || fast2smsKey === "your_fast2sms_api_key") {
       throw new Error("SMS service not configured. Please choose email OTP.");
     }
-    await twilioClient.messages.create({
-      body: `Your Pollaris voting OTP is: ${otp}. Valid for 10 minutes. Do not share it.`,
-      from: process.env.TWILIO_PHONE_NUMBER,
-      to: phone,
-    });
-    console.log(`📱 OTP SMS sent to ${phone}`);
+    // Fast2SMS needs 10-digit Indian number (strip +91 or 91 prefix)
+    const mobile = phone.replace(/^\+91/, "").replace(/^91/, "").replace(/\D/g, "");
+    if (mobile.length !== 10) {
+      throw new Error("Invalid Indian mobile number. Please enter a 10-digit number.");
+    }
+    const response = await axios.post(
+      "https://www.fast2sms.com/dev/bulkV2",
+      {
+        route: "otp",
+        variables_values: otp,
+        flash: 0,
+        numbers: mobile,
+      },
+      {
+        headers: { authorization: fast2smsKey },
+      }
+    );
+    if (!response.data.return) {
+      throw new Error(`SMS failed: ${JSON.stringify(response.data.message)}`);
+    }
+    console.log(`📱 OTP SMS sent to ${phone} via Fast2SMS`);
   }
 };
 
