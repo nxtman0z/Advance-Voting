@@ -327,65 +327,89 @@ function TabCreateElection({ API, onCreated }) {
   };
 
   return (
-    <div className="max-w-lg">
-      <h2 className="text-xl font-bold text-white mb-6">Create New Election</h2>
-      <form onSubmit={handleSubmit} className="space-y-5">
-        <Field
-          label="Election Title *"
-          value={form.title}
-          onChange={(v) => setForm((f) => ({ ...f, title: v }))}
-          placeholder="e.g. Uttar Pradesh Vidhan Sabha 2025"
-        />
-        <Field
-          label="State / Area"
-          value={form.state}
-          onChange={(v) => setForm((f) => ({ ...f, state: v }))}
-          placeholder="e.g. Uttar Pradesh"
-        />
+    <div className="max-w-3xl">
+      {/* Section Header */}
+      <div className="flex items-center gap-4 mb-8">
+        <div className="w-12 h-12 rounded-2xl bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-blue-400 font-black text-lg flex-shrink-0">+</div>
         <div>
-          <label className="block text-slate-300 text-sm mb-1">Description</label>
-          <textarea
-            value={form.description}
-            onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-            rows={3}
-            className="w-full bg-slate-800 border border-slate-600/50 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-blue-500 resize-none"
-            placeholder="Brief description of this election"
-          />
+          <h2 className="text-xl font-bold text-white">Create New Election</h2>
+          <p className="text-slate-400 text-sm">Fill in the details below. Election will be deployed to the Sepolia blockchain.</p>
         </div>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-slate-300 text-sm mb-1">Start Time *</label>
-            <input
-              type="datetime-local"
-              value={form.startTime}
-              onChange={(e) => setForm((f) => ({ ...f, startTime: e.target.value }))}
-              className="w-full bg-slate-800 border border-slate-600/50 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-blue-500"
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Card: Basic Info */}
+        <div className="bg-slate-800/60 border border-slate-700/50 rounded-2xl p-6 space-y-5">
+          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Basic Information</p>
+          <Field
+            label="Election Title *"
+            value={form.title}
+            onChange={(v) => setForm((f) => ({ ...f, title: v }))}
+            placeholder="e.g. Uttar Pradesh Vidhan Sabha 2025"
+          />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <Field
+              label="State / Area"
+              value={form.state}
+              onChange={(v) => setForm((f) => ({ ...f, state: v }))}
+              placeholder="e.g. Uttar Pradesh"
             />
-          </div>
-          <div>
-            <label className="block text-slate-300 text-sm mb-1">End Time *</label>
-            <input
-              type="datetime-local"
-              value={form.endTime}
-              onChange={(e) => setForm((f) => ({ ...f, endTime: e.target.value }))}
-              className="w-full bg-slate-800 border border-slate-600/50 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-blue-500"
-            />
+            <div>
+              <label className="block text-slate-300 text-sm font-medium mb-2">Description</label>
+              <textarea
+                value={form.description}
+                onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+                rows={3}
+                className="w-full bg-slate-900/60 border border-slate-600/50 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 resize-none transition-colors placeholder-slate-600"
+                placeholder="Brief description of this election"
+              />
+            </div>
           </div>
         </div>
 
-        <div className="bg-blue-600/10 border border-blue-500/30 rounded-lg p-3 text-sm text-blue-300">
-          Warning: Creating will deploy the election to the Sepolia blockchain immediately. This may take 15-30 seconds.
+        {/* Card: Schedule */}
+        <div className="bg-slate-800/60 border border-slate-700/50 rounded-2xl p-6 space-y-5">
+          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Schedule</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div>
+              <label className="block text-slate-300 text-sm font-medium mb-2">Start Time *</label>
+              <input
+                type="datetime-local"
+                value={form.startTime}
+                onChange={(e) => setForm((f) => ({ ...f, startTime: e.target.value }))}
+                className="w-full bg-slate-900/60 border border-slate-600/50 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-colors"
+              />
+            </div>
+            <div>
+              <label className="block text-slate-300 text-sm font-medium mb-2">End Time *</label>
+              <input
+                type="datetime-local"
+                value={form.endTime}
+                onChange={(e) => setForm((f) => ({ ...f, endTime: e.target.value }))}
+                className="w-full bg-slate-900/60 border border-slate-600/50 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-colors"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Notice */}
+        <div className="flex gap-3 bg-blue-600/10 border border-blue-500/30 rounded-2xl p-4">
+          <div className="w-8 h-8 rounded-lg bg-blue-600/20 flex items-center justify-center flex-shrink-0 text-blue-400 font-bold text-sm">!</div>
+          <div>
+            <p className="text-blue-300 text-sm font-semibold mb-0.5">Blockchain Deployment</p>
+            <p className="text-blue-300/70 text-xs">This will deploy the election to Sepolia testnet immediately. The process takes 15-30 seconds and requires gas fees.</p>
+          </div>
         </div>
 
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm transition-colors disabled:opacity-60"
+          className="w-full py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm transition-all shadow-lg shadow-blue-600/20 disabled:opacity-60 disabled:cursor-not-allowed"
         >
           {loading ? (
             <span className="flex items-center justify-center gap-2">
               <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              Deploying to blockchain...
+              Deploying to Blockchain...
             </span>
           ) : (
             "Create Election on Blockchain"
@@ -467,81 +491,126 @@ function TabAddParty({ API }) {
   };
 
   return (
-    <div className="max-w-lg">
-      <h2 className="text-xl font-bold text-white mb-6">Add Party / Candidate</h2>
-      <form onSubmit={handleSubmit} className="space-y-5">
-        {/* Election selector */}
+    <div className="max-w-3xl">
+      {/* Section Header */}
+      <div className="flex items-center gap-4 mb-8">
+        <div className="w-12 h-12 rounded-2xl bg-purple-600/20 border border-purple-500/30 flex items-center justify-center text-purple-400 font-black text-lg flex-shrink-0">P</div>
         <div>
-          <label className="block text-slate-300 text-sm mb-1">Election *</label>
-          <select
-            value={selectedElectionId}
-            onChange={(e) => setSelectedElectionId(e.target.value)}
-            className="w-full bg-slate-800 border border-slate-600/50 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-blue-500"
-          >
-            {elections.length === 0 ? (
-              <option value="">No deployed elections</option>
-            ) : (
-              elections.map((el) => (
-                <option key={el._id} value={el._id}>{el.title} (#{el.onChainId})</option>
-              ))
-            )}
-          </select>
+          <h2 className="text-xl font-bold text-white">Add Party / Candidate</h2>
+          <p className="text-slate-400 text-sm">Select a deployed election and add a party with its candidate.</p>
+        </div>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Card: Election selector */}
+        <div className="bg-slate-800/60 border border-slate-700/50 rounded-2xl p-6">
+          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Select Election</p>
+          {elections.length === 0 ? (
+            <div className="flex items-center gap-3 bg-yellow-600/10 border border-yellow-500/30 rounded-xl p-4">
+              <span className="text-yellow-400 font-bold text-sm">!</span>
+              <p className="text-yellow-300 text-sm">No deployed elections found. Create an election first from the Create Election tab.</p>
+            </div>
+          ) : (
+            <div className="grid gap-3">
+              {elections.map((el) => (
+                <label
+                  key={el._id}
+                  className={`flex items-center gap-4 p-4 rounded-xl border cursor-pointer transition-all ${
+                    selectedElectionId === el._id
+                      ? "bg-purple-600/15 border-purple-500/50"
+                      : "bg-slate-900/40 border-slate-700/40 hover:border-slate-600"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="election"
+                    value={el._id}
+                    checked={selectedElectionId === el._id}
+                    onChange={() => setSelectedElectionId(el._id)}
+                    className="accent-purple-500"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-white font-semibold text-sm truncate">{el.title}</p>
+                    <p className="text-slate-400 text-xs">Chain ID: #{el.onChainId} | {el.state}</p>
+                  </div>
+                  <span className="text-xs bg-green-600/20 border border-green-500/30 text-green-400 px-2 py-0.5 rounded-full flex-shrink-0">deployed</span>
+                </label>
+              ))}
+            </div>
+          )}
         </div>
 
-        <Field
-          label="Party Name *"
-          value={form.partyName}
-          onChange={(v) => setForm((f) => ({ ...f, partyName: v }))}
-          placeholder="e.g. Bharatiya Janata Party"
-        />
-        <Field
-          label="Candidate Name *"
-          value={form.candidateName}
-          onChange={(v) => setForm((f) => ({ ...f, candidateName: v }))}
-          placeholder="e.g. Narendra Modi"
-        />
-        <div>
-          <label className="block text-slate-300 text-sm mb-1">Candidate Bio</label>
-          <textarea
-            value={form.candidateBio}
-            onChange={(e) => setForm((f) => ({ ...f, candidateBio: e.target.value }))}
-            rows={2}
-            className="w-full bg-slate-800 border border-slate-600/50 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-blue-500 resize-none"
-            placeholder="Short candidate description"
-          />
+        {/* Card: Party + Candidate Info */}
+        <div className="bg-slate-800/60 border border-slate-700/50 rounded-2xl p-6 space-y-5">
+          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Party Information</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <Field
+              label="Party Name *"
+              value={form.partyName}
+              onChange={(v) => setForm((f) => ({ ...f, partyName: v }))}
+              placeholder="e.g. Bharatiya Janata Party"
+            />
+            <Field
+              label="Candidate Name *"
+              value={form.candidateName}
+              onChange={(v) => setForm((f) => ({ ...f, candidateName: v }))}
+              placeholder="e.g. Narendra Modi"
+            />
+          </div>
+          <div>
+            <label className="block text-slate-300 text-sm font-medium mb-2">Candidate Bio</label>
+            <textarea
+              value={form.candidateBio}
+              onChange={(e) => setForm((f) => ({ ...f, candidateBio: e.target.value }))}
+              rows={2}
+              className="w-full bg-slate-900/60 border border-slate-600/50 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500/30 resize-none transition-colors placeholder-slate-600"
+              placeholder="Short description of the candidate"
+            />
+          </div>
         </div>
 
-        {/* Image uploads */}
-        <ImageUpload
-          label="Party Symbol * (required)"
-          preview={previews.partySymbol}
-          onChange={(f) => handleFile("partySymbol", f)}
-        />
-        <ImageUpload
-          label="Party Banner (optional)"
-          preview={previews.partyImage}
-          onChange={(f) => handleFile("partyImage", f)}
-        />
-        <ImageUpload
-          label="Candidate Photo (optional)"
-          preview={previews.candidatePhoto}
-          onChange={(f) => handleFile("candidatePhoto", f)}
-          round
-        />
+        {/* Card: Image uploads */}
+        <div className="bg-slate-800/60 border border-slate-700/50 rounded-2xl p-6 space-y-5">
+          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Images</p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+            <ImageUpload
+              label="Party Symbol *"
+              preview={previews.partySymbol}
+              onChange={(f) => handleFile("partySymbol", f)}
+            />
+            <ImageUpload
+              label="Party Banner"
+              preview={previews.partyImage}
+              onChange={(f) => handleFile("partyImage", f)}
+            />
+            <ImageUpload
+              label="Candidate Photo"
+              preview={previews.candidatePhoto}
+              onChange={(f) => handleFile("candidatePhoto", f)}
+              round
+            />
+          </div>
+          <p className="text-slate-600 text-xs">Party Symbol is required. Banner and Candidate Photo are optional.</p>
+        </div>
 
-        <div className="bg-yellow-600/10 border border-yellow-500/30 rounded-lg p-3 text-sm text-yellow-300">
-          Warning: Adding a party will call <code>addCandidate</code> on the blockchain. This requires gas and takes ~15 seconds.
+        {/* Notice */}
+        <div className="flex gap-3 bg-yellow-600/10 border border-yellow-500/30 rounded-2xl p-4">
+          <div className="w-8 h-8 rounded-lg bg-yellow-600/20 flex items-center justify-center flex-shrink-0 text-yellow-400 font-bold text-sm">!</div>
+          <div>
+            <p className="text-yellow-300 text-sm font-semibold mb-0.5">Blockchain Transaction</p>
+            <p className="text-yellow-300/70 text-xs">Adding a party calls <code className="bg-yellow-900/30 px-1 rounded">addCandidate</code> on the smart contract. This requires gas and takes ~15 seconds.</p>
+          </div>
         </div>
 
         <button
           type="submit"
-          disabled={loading}
-          className="w-full py-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-sm transition-colors disabled:opacity-60"
+          disabled={loading || elections.length === 0}
+          className="w-full py-3.5 rounded-2xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-sm transition-all shadow-lg shadow-purple-600/20 disabled:opacity-60 disabled:cursor-not-allowed"
         >
           {loading ? (
             <span className="flex items-center justify-center gap-2">
               <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              Adding to blockchain...
+              Adding to Blockchain...
             </span>
           ) : (
             "Add Party + Candidate"
@@ -758,13 +827,13 @@ function VRow({ icon, value, mono = false }) {
 function Field({ label, value, onChange, placeholder, type = "text" }) {
   return (
     <div>
-      <label className="block text-slate-300 text-sm mb-1">{label}</label>
+      <label className="block text-slate-300 text-sm font-medium mb-2">{label}</label>
       <input
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full bg-slate-800 border border-slate-600/50 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-blue-500"
+        className="w-full bg-slate-900/60 border border-slate-600/50 rounded-xl px-4 py-2.5 text-white text-sm placeholder-slate-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-colors"
       />
     </div>
   );
@@ -774,22 +843,22 @@ function ImageUpload({ label, preview, onChange, round = false }) {
   const fileRef = useRef(null);
   return (
     <div>
-      <label className="block text-slate-300 text-sm mb-1">{label}</label>
+      <label className="block text-slate-300 text-sm font-medium mb-2">{label}</label>
       <div
         onClick={() => fileRef.current?.click()}
-        className="cursor-pointer border-2 border-dashed border-slate-600/50 hover:border-blue-500/50 rounded-xl p-4 text-center transition-colors"
+        className="cursor-pointer border-2 border-dashed border-slate-600/50 hover:border-purple-500/50 bg-slate-900/40 hover:bg-purple-600/5 rounded-xl p-4 text-center transition-all min-h-[100px] flex flex-col items-center justify-center gap-2"
       >
         {preview ? (
           <img
             src={preview}
             alt="preview"
-            className={`mx-auto h-20 w-20 object-cover ${round ? "rounded-full" : "rounded-lg"} mb-2`}
+            className={`mx-auto h-20 w-20 object-cover ${round ? "rounded-full ring-2 ring-purple-500/40" : "rounded-lg"}`}
           />
         ) : (
-          <div className="text-slate-500 text-sm">
-            <div className="text-3xl mb-1 text-slate-400">+</div>
-            Click to upload
-          </div>
+          <>
+            <div className="w-10 h-10 rounded-xl bg-slate-700/60 flex items-center justify-center text-slate-400 text-xl font-bold">+</div>
+            <p className="text-slate-500 text-xs">Click to upload</p>
+          </>
         )}
         <input
           ref={fileRef}
