@@ -47,19 +47,35 @@ function AppRoutes() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 text-white">
       {/* ─── Global Logo Watermark ─────────────────────────────────────── */}
+      {/* Outer glow layer */}
       <div
         aria-hidden="true"
         style={{
           position: "fixed",
-          inset: 0,
+          top: "50%", left: "50%",
+          transform: "translate(-50%, -50%)",
+          width: "900px", height: "900px",
+          zIndex: 0,
+          pointerEvents: "none",
+          background: "radial-gradient(circle, rgba(59,130,246,0.07) 0%, rgba(6,182,212,0.04) 40%, transparent 70%)",
+          borderRadius: "50%",
+        }}
+      />
+      {/* Logo image */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: "fixed",
+          top: "50%", left: "50%",
+          transform: "translate(-50%, -50%)",
+          width: "820px", height: "820px",
           zIndex: 0,
           pointerEvents: "none",
           backgroundImage: "url('/logo.png')",
           backgroundRepeat: "no-repeat",
           backgroundPosition: "center center",
-          backgroundSize: "600px",
-          opacity: 0.07,
-          filter: "blur(0.5px)",
+          backgroundSize: "contain",
+          opacity: 0.06,
         }}
       />
       <Navbar />
