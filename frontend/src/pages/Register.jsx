@@ -174,8 +174,8 @@ export default function Register() {
                           bg-gradient-to-br from-blue-600 to-blue-700 shadow-xl shadow-blue-600/40 mb-4">
             <SiEthereum size={26} className="text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-white">Voter Registration</h1>
-          <p className="text-slate-400 mt-1 text-sm">Create your secure blockchain voting identity</p>
+          <h1 className="text-3xl font-bold text-white">Join <span className="text-blue-400">Pollaris</span></h1>
+          <p className="text-slate-400 mt-1 text-sm">Where Every Voice Finds Direction</p>
         </div>
 
         {/* Card */}

@@ -35,8 +35,8 @@ export default function Login() {
           <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-600/30">
             <SiEthereum size={30} className="text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-white">Welcome Back</h1>
-          <p className="text-slate-400 mt-1">Sign in to cast your vote</p>
+          <h1 className="text-3xl font-bold text-white">Welcome to <span className="text-blue-400">Pollaris</span></h1>
+          <p className="text-slate-400 mt-1">Where Every Voice Finds Direction</p>
         </div>
 
         <div className="card p-8">
