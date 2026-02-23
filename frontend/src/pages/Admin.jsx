@@ -11,8 +11,6 @@ import toast from "react-hot-toast";
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 const UPLOADS_BASE = API_BASE.replace("/api", "") + "/uploads";
 
-const TABS = ["Dashboard", "Create Election", "Add Party", "Voters"];
-
 export default function Admin() {
   const { user, API } = useAuth();
   const [tab, setTab] = useState(0);
@@ -27,38 +25,66 @@ export default function Admin() {
     );
   }
 
+  const TAB_LIST = [
+    { label: "Dashboard",       icon: "D" },
+    { label: "Create Election", icon: "+" },
+    { label: "Add Party",       icon: "P" },
+    { label: "Voters",          icon: "V" },
+  ];
+
   return (
-    <div className="max-w-6xl mx-auto px-4 py-10">
-      {/* Header */}
-      <div className="mb-8 flex items-center gap-3">
-        <div className="w-10 h-10 bg-purple-600 rounded-xl flex items-center justify-center text-sm font-bold text-white">A</div>
-        <div>
-          <h1 className="text-2xl font-bold text-white">Admin Panel</h1>
-          <p className="text-slate-400 text-sm">Manage elections, parties and vote counts</p>
+    <div className="max-w-6xl mx-auto px-4 py-8">
+      {/* ── Header Banner ───────────────────────────────────── */}
+      <div className="relative mb-8 rounded-2xl bg-gradient-to-br from-purple-950/60 via-slate-900 to-slate-900 border border-purple-500/20 p-6 overflow-hidden">
+        <div className="absolute top-0 right-0 w-72 h-72 bg-purple-600/10 rounded-full -translate-y-1/2 translate-x-1/4 blur-3xl pointer-events-none" />
+        <div className="relative flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-2xl bg-purple-600/20 border border-purple-500/30 flex items-center justify-center text-2xl font-black text-purple-300 flex-shrink-0">
+              {user?.fullName?.charAt(0)?.toUpperCase() || "A"}
+            </div>
+            <div>
+              <div className="flex items-center gap-2.5 mb-1">
+                <h1 className="text-2xl font-black text-white">Admin Panel</h1>
+                <span className="text-xs bg-purple-600/30 border border-purple-500/40 text-purple-300 px-2.5 py-0.5 rounded-full font-bold tracking-wide">ADMIN</span>
+              </div>
+              <p className="text-slate-400 text-sm">{user?.email} &mdash; Full system access</p>
+            </div>
+          </div>
+          <div className="text-sm text-slate-400 text-right">
+            <p className="text-slate-500 text-xs">Logged in as</p>
+            <p className="text-white font-semibold">{user?.fullName}</p>
+          </div>
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-1 bg-slate-800/50 rounded-xl p-1 mb-8 inline-flex">
-        {TABS.map((t, i) => (
+      {/* ── Tabs ────────────────────────────────────────────── */}
+      <div className="flex gap-2 mb-8 flex-wrap">
+        {TAB_LIST.map((t, i) => (
           <button
-            key={t}
+            key={t.label}
             onClick={() => setTab(i)}
-            className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
               tab === i
-                ? "bg-blue-600 text-white shadow"
-                : "text-slate-400 hover:text-white"
+                ? "bg-blue-600 text-white shadow-lg shadow-blue-600/25"
+                : "bg-slate-800/80 border border-slate-700/50 text-slate-400 hover:text-white hover:border-slate-600"
             }`}
           >
-            {t}
+            <span className={`w-5 h-5 rounded-md flex items-center justify-center text-xs font-black ${
+              tab === i ? "bg-white/20" : "bg-slate-700"
+            }`}>
+              {t.icon}
+            </span>
+            {t.label}
           </button>
         ))}
       </div>
 
-      {tab === 0 && <TabDashboard API={API} />}
-      {tab === 1 && <TabCreateElection API={API} onCreated={() => setTab(0)} />}
-      {tab === 2 && <TabAddParty API={API} />}
-      {tab === 3 && <TabVoters API={API} />}
+      <div>
+        {tab === 0 && <TabDashboard API={API} />}
+        {tab === 1 && <TabCreateElection API={API} onCreated={() => setTab(0)} />}
+        {tab === 2 && <TabAddParty API={API} />}
+        {tab === 3 && <TabVoters API={API} />}
+      </div>
     </div>
   );
 }
@@ -115,21 +141,33 @@ function TabDashboard({ API }) {
     <div className="space-y-8">
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        {[
-          { label: "Total Voters", value: data.totalVoters, color: "blue" },
-          { label: "Elections", value: data.totalElections, color: "purple" },
-          { label: "Active", value: data.activeElections, color: "green" },
-          { label: "Parties", value: data.totalParties, color: "yellow" },
-        ].map((s) => (
-          <div key={s.label} className={`bg-${s.color}-600/10 border border-${s.color}-500/30 rounded-xl p-4`}>
-            <div className={`text-2xl font-bold text-${s.color}-400`}>{s.value}</div>
-            <div className="text-slate-400 text-sm">{s.label}</div>
-          </div>
-        ))}
+        <div className="bg-blue-600/10 border border-blue-500/30 rounded-2xl p-5">
+          <p className="text-xs font-semibold text-blue-400 uppercase tracking-wider mb-2">Total Voters</p>
+          <p className="text-4xl font-black text-white">{data.totalVoters}</p>
+          <p className="text-blue-400/60 text-xs mt-1">registered accounts</p>
+        </div>
+        <div className="bg-purple-600/10 border border-purple-500/30 rounded-2xl p-5">
+          <p className="text-xs font-semibold text-purple-400 uppercase tracking-wider mb-2">Elections</p>
+          <p className="text-4xl font-black text-white">{data.totalElections}</p>
+          <p className="text-purple-400/60 text-xs mt-1">total created</p>
+        </div>
+        <div className="bg-green-600/10 border border-green-500/30 rounded-2xl p-5">
+          <p className="text-xs font-semibold text-green-400 uppercase tracking-wider mb-2">Active</p>
+          <p className="text-4xl font-black text-white">{data.activeElections}</p>
+          <p className="text-green-400/60 text-xs mt-1">live right now</p>
+        </div>
+        <div className="bg-yellow-600/10 border border-yellow-500/30 rounded-2xl p-5">
+          <p className="text-xs font-semibold text-yellow-400 uppercase tracking-wider mb-2">Parties</p>
+          <p className="text-4xl font-black text-white">{data.totalParties}</p>
+          <p className="text-yellow-400/60 text-xs mt-1">registered candidates</p>
+        </div>
       </div>
 
       {/* Elections */}
-      <h2 className="text-xl font-bold text-white">All Elections</h2>
+      <div className="flex items-center gap-3">
+        <h2 className="text-xl font-bold text-white">All Elections</h2>
+        <span className="text-xs bg-slate-800 border border-slate-700/50 text-slate-400 px-2.5 py-0.5 rounded-full">{data.elections.length}</span>
+      </div>
       {data.elections.length === 0 ? (
         <p className="text-slate-400">No elections yet. Create one!</p>
       ) : (
@@ -137,13 +175,27 @@ function TabDashboard({ API }) {
           {data.elections.map((election) => (
             <div
               key={election._id}
-              className="bg-slate-800/60 border border-slate-700/50 rounded-xl p-5 space-y-4"
+              className={`border rounded-2xl p-5 space-y-4 transition-all ${
+                election.status === "active"
+                  ? "bg-green-950/20 border-green-500/20"
+                  : election.status === "ended"
+                  ? "bg-slate-800/30 border-slate-700/30"
+                  : "bg-slate-800/60 border-slate-700/50"
+              }`}
             >
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <h3 className="font-bold text-white text-lg">{election.title}</h3>
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="font-bold text-white text-lg">{election.title}</h3>
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-semibold border ${
+                      election.status === "active" ? "bg-green-600/20 text-green-400 border-green-500/30" :
+                      election.status === "ended" ? "bg-slate-600/20 text-slate-400 border-slate-500/30" :
+                      election.status === "upcoming" ? "bg-blue-600/20 text-blue-400 border-blue-500/30" :
+                      "bg-slate-600/20 text-slate-400 border-slate-500/30"
+                    }`}>{election.status}</span>
+                  </div>
                   <p className="text-slate-400 text-sm">
-                    {election.state} | onChainId: #{election.onChainId ?? "-"} | {election.totalVotes} votes
+                    {election.state} | Chain ID: #{election.onChainId ?? "-"} | {election.totalVotes} votes
                   </p>
                   <p className="text-slate-500 text-xs">
                     {new Date(election.startTime).toLocaleDateString()} - {new Date(election.endTime).toLocaleDateString()}
@@ -210,24 +262,28 @@ function TabDashboard({ API }) {
       {/* Recent users */}
       {data.recentUsers?.length > 0 && (
         <>
-          <h2 className="text-xl font-bold text-white">Recent Registrations</h2>
-          <div className="bg-slate-800/60 border border-slate-700/50 rounded-xl divide-y divide-slate-700/50">
+          <div className="flex items-center gap-3">
+            <h2 className="text-xl font-bold text-white">Recent Registrations</h2>
+            <span className="text-xs bg-slate-800 border border-slate-700/50 text-slate-400 px-2.5 py-0.5 rounded-full">{data.recentUsers.length}</span>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {data.recentUsers.map((u) => (
-              <div key={u._id} className="p-4 flex items-center gap-4">
+              <div key={u._id} className="bg-slate-800/60 border border-slate-700/50 rounded-2xl p-4 flex items-center gap-3">
                 {u.photo ? (
                   <img
                     src={`${UPLOADS_BASE}/photos/${u.photo}`}
-                    className="w-10 h-10 rounded-full object-cover"
+                    className="w-10 h-10 rounded-full object-cover flex-shrink-0"
                     alt=""
                   />
                 ) : (
-                  <div className="w-10 h-10 rounded-full bg-blue-600/30 flex items-center justify-center text-blue-400 font-bold">
+                  <div className="w-10 h-10 rounded-full bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-blue-400 font-bold flex-shrink-0">
                     {u.fullName?.charAt(0)}
                   </div>
                 )}
-                <div>
-                  <p className="text-white text-sm font-medium">{u.fullName}</p>
-                  <p className="text-slate-500 text-xs">{u.email} | {new Date(u.createdAt).toLocaleDateString()}</p>
+                <div className="min-w-0">
+                  <p className="text-white text-sm font-semibold truncate">{u.fullName}</p>
+                  <p className="text-slate-500 text-xs truncate">{u.email}</p>
+                  <p className="text-slate-600 text-xs">{new Date(u.createdAt).toLocaleDateString()}</p>
                 </div>
               </div>
             ))}

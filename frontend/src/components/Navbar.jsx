@@ -68,10 +68,15 @@ export default function Navbar() {
                   onClick={() => setDropdownOpen(!dropdownOpen)}
                   className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-700/50 hover:bg-slate-700 transition-colors"
                 >
-                  <div className="w-7 h-7 bg-blue-600 rounded-full flex items-center justify-center text-xs font-bold">
+                  <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${user?.role === "admin" ? "bg-purple-600" : "bg-blue-600"}`}>
                     {user.fullName?.charAt(0).toUpperCase()}
                   </div>
-                  <span className="text-sm text-slate-200">{user.fullName?.split(" ")[0]}</span>
+                  <div className="flex flex-col items-start leading-tight">
+                    <span className="text-sm text-slate-200">{user.fullName?.split(" ")[0]}</span>
+                    {user?.role === "admin" && (
+                      <span className="text-xs text-purple-400 font-bold">Admin</span>
+                    )}
+                  </div>
                 </button>
 
                 {dropdownOpen && (
