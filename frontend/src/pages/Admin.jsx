@@ -195,7 +195,7 @@ function TabDashboard({ API }) {
                     }`}>{election.status}</span>
                   </div>
                   <p className="text-slate-400 text-sm">
-                    {election.state} | Chain ID: #{election.onChainId ?? "-"} | {election.totalVotes} votes
+                    {election.state} | {election.totalVotes} votes
                   </p>
                   <p className="text-slate-500 text-xs">
                     {new Date(election.startTime).toLocaleDateString()} - {new Date(election.endTime).toLocaleDateString()}
@@ -316,7 +316,7 @@ function TabCreateElection({ API, onCreated }) {
     setLoading(true);
     try {
       const { data } = await API.post("/admin/elections", form);
-      toast.success(`Election created! On-chain ID: #${data.data.onChainId}`);
+      toast.success("Election created successfully!");
       setForm({ title: "", description: "", state: "", startTime: "", endTime: "" });
       onCreated?.();
     } catch (err) {
@@ -333,7 +333,7 @@ function TabCreateElection({ API, onCreated }) {
         <div className="w-12 h-12 rounded-2xl bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-blue-400 font-black text-lg flex-shrink-0">+</div>
         <div>
           <h2 className="text-xl font-bold text-white">Create New Election</h2>
-          <p className="text-slate-400 text-sm">Fill in the details below. Election will be deployed to the Sepolia blockchain.</p>
+          <p className="text-slate-400 text-sm">Fill in the details below to create a new election.</p>
         </div>
       </div>
 
@@ -389,15 +389,6 @@ function TabCreateElection({ API, onCreated }) {
                 className="w-full bg-slate-900/60 border border-slate-600/50 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-colors"
               />
             </div>
-          </div>
-        </div>
-
-        {/* Notice */}
-        <div className="flex gap-3 bg-blue-600/10 border border-blue-500/30 rounded-2xl p-4">
-          <div className="w-8 h-8 rounded-lg bg-blue-600/20 flex items-center justify-center flex-shrink-0 text-blue-400 font-bold text-sm">!</div>
-          <div>
-            <p className="text-blue-300 text-sm font-semibold mb-0.5">Blockchain Deployment</p>
-            <p className="text-blue-300/70 text-xs">This will deploy the election to Sepolia testnet immediately. The process takes 15-30 seconds and requires gas fees.</p>
           </div>
         </div>
 
@@ -531,7 +522,7 @@ function TabAddParty({ API }) {
                   />
                   <div className="flex-1 min-w-0">
                     <p className="text-white font-semibold text-sm truncate">{el.title}</p>
-                    <p className="text-slate-400 text-xs">Chain ID: #{el.onChainId} | {el.state}</p>
+                    <p className="text-slate-400 text-xs">{el.state}</p>
                   </div>
                   <span className="text-xs bg-green-600/20 border border-green-500/30 text-green-400 px-2 py-0.5 rounded-full flex-shrink-0">deployed</span>
                 </label>
@@ -589,16 +580,6 @@ function TabAddParty({ API }) {
               onChange={(f) => handleFile("candidatePhoto", f)}
               round
             />
-          </div>
-          <p className="text-slate-600 text-xs">Party Symbol is required. Banner and Candidate Photo are optional.</p>
-        </div>
-
-        {/* Notice */}
-        <div className="flex gap-3 bg-yellow-600/10 border border-yellow-500/30 rounded-2xl p-4">
-          <div className="w-8 h-8 rounded-lg bg-yellow-600/20 flex items-center justify-center flex-shrink-0 text-yellow-400 font-bold text-sm">!</div>
-          <div>
-            <p className="text-yellow-300 text-sm font-semibold mb-0.5">Blockchain Transaction</p>
-            <p className="text-yellow-300/70 text-xs">Adding a party calls <code className="bg-yellow-900/30 px-1 rounded">addCandidate</code> on the smart contract. This requires gas and takes ~15 seconds.</p>
           </div>
         </div>
 
@@ -771,7 +752,7 @@ function TabVoters({ API }) {
                 <VRow icon="" value={u.isFaceRegistered ? "Face OK" : "No face"} />
               </div>
               <div className="flex flex-wrap gap-1.5 text-xs">
-                <span className={`px-2 py-0.5 rounded-full border font-medium ${u.isVerified ? "bg-green-600/20 border-green-500/30 text-green-300" : "bg-yellow-600/20 border-yellow-500/30 text-yellow-300"}`}>{u.isVerified ? "v Verified" : "Note: Unverified"}</span>
+                <span className={`px-2 py-0.5 rounded-full border font-medium ${u.isVerified ? "bg-green-600/20 border-green-500/30 text-green-300" : "bg-yellow-600/20 border-yellow-500/30 text-yellow-300"}`}>{u.isVerified ? "✓ Verified" : "Unverified"}</span>
                 <span className={`px-2 py-0.5 rounded-full border font-medium ${u.isActive ? "bg-blue-600/20 border-blue-500/30 text-blue-300" : "bg-red-600/20 border-red-500/30 text-red-300"}`}>{u.isActive ? "Active" : "Inactive"}</span>
                 {u.isBlockedFromVoting && <span className="px-2 py-0.5 rounded-full border bg-red-600/20 border-red-500/30 text-red-300 font-medium">Blocked</span>}
               </div>

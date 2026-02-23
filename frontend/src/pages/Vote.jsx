@@ -639,7 +639,7 @@ export default function Vote() {
         <h3 className="text-2xl font-bold text-white">Vote Cast Successfully!</h3>
         <p className="text-slate-400 text-sm">
           Your vote for <span className="text-white font-medium">{selectedParty?.partyName}</span> has been
-          permanently recorded on the Sepolia blockchain.
+          permanently recorded on the blockchain.
         </p>
 
         {txHash && (

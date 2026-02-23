@@ -46,7 +46,7 @@ export default function Results() {
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl font-bold text-white">Election Results</h1>
-          <p className="text-slate-400 text-sm mt-1">Live vote counts from the Sepolia blockchain</p>
+          <p className="text-slate-400 text-sm mt-1">Live results from all elections</p>
         </div>
         <button
           onClick={() => fetchResults(true)}
