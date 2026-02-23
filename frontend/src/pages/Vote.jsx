@@ -568,7 +568,7 @@ export default function Vote() {
           onClick={() => setStep(1)}
           className="w-full text-slate-500 text-xs hover:text-slate-300 transition-colors"
         >
-          <- Back to face verification
+          Back to face verification
         </button>
       </div>
     );
@@ -608,7 +608,7 @@ export default function Vote() {
             onClick={() => setStep(0)}
             className="flex-1 py-2.5 rounded-lg border border-slate-600/50 text-slate-300 hover:bg-slate-700/50 transition-colors text-sm"
           >
-            <- Change Vote
+            Change Vote
           </button>
           <button
             onClick={handleCastVote}
