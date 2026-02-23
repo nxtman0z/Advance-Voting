@@ -313,6 +313,10 @@ function TabCreateElection({ API, onCreated }) {
       toast.error("Title, start time, and end time are required");
       return;
     }
+    if (new Date(form.startTime) >= new Date(form.endTime)) {
+      toast.error("Start time must be before end time");
+      return;
+    }
     setLoading(true);
     try {
       const { data } = await API.post("/admin/elections", form);

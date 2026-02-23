@@ -159,6 +159,13 @@ exports.createElection = async (req, res) => {
       });
     }
 
+    if (new Date(startTime) >= new Date(endTime)) {
+      return res.status(400).json({
+        success: false,
+        message: "Start time must be before end time",
+      });
+    }
+
     // 1 — Deploy on-chain first
     let onChainId, deployTxHash;
     try {
