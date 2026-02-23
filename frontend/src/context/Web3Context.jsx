@@ -84,11 +84,11 @@ export function Web3Provider({ children }) {
 
     const handleAccountsChanged = (accounts) => {
       if (accounts.length === 0) {
-        disconnectWallet();
-      } else {
-        setAccount(accounts[0].toLowerCase());
-        toast.info("Account changed");
+        // User disconnected wallet in MetaMask — clear state silently, no toast
+        setProvider(null); setSigner(null); setAccount(null);
+        setContract(null); setChainId(null);
       }
+      // Do NOT auto-reconnect or show toast — wallet connects only on explicit click
     };
 
     const handleChainChanged = (chainIdHex) => {
@@ -105,14 +105,7 @@ export function Web3Provider({ children }) {
     };
   }, []);
 
-  // ─── Auto-reconnect if previously connected ───────────────────────────
-  useEffect(() => {
-    if (window.ethereum) {
-      window.ethereum.request({ method: "eth_accounts" }).then((accounts) => {
-        if (accounts.length > 0) connectWallet();
-      });
-    }
-  }, []);
+  // Wallet connects ONLY on explicit user action — no auto-reconnect on mount
 
   // ─── Cast Vote via Smart Contract ─────────────────────────────────────
   const castVote = async (electionId, candidateId) => {
