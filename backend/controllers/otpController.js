@@ -12,8 +12,15 @@ exports.sendOtp = async (req, res) => {
     const user = await User.findById(req.user.id);
     if (!user) return res.status(404).json({ success: false, message: "User not found" });
 
-    // Cool-down: prevent spamming (1 OTP per 60 seconds)
-    // otpExpires = createdAt + 10 min → was created in last 60s if otpExpires > now + 9 min
+    // via: "email" | "phone" — defaults to "email"
+    const via = req.body.via === "phone" ? "phone" : "email";
+
+    // Phone check
+    if (via === "phone" && !user.phone) {
+      return res.status(400).json({ success: false, message: "No phone number on your account. Choose email OTP." });
+    }
+
+    // Cool-down: 1 OTP per 60 seconds
     if (user.otpExpires && user.otpExpires > new Date(Date.now() + 9 * 60 * 1000)) {
       return res.status(429).json({
         success: false,
@@ -30,18 +37,22 @@ exports.sendOtp = async (req, res) => {
     await user.save({ validateBeforeSave: false });
 
     try {
-      await sendOTP(user.email, user.phone, otp, "voting");
-    } catch (emailErr) {
-      console.error("sendOtp email error:", emailErr.message);
+      await sendOTP(user.email, user.phone, otp, "voting", via);
+    } catch (sendErr) {
+      console.error("sendOtp error:", sendErr.message);
       return res.status(500).json({
         success: false,
-        message: "Failed to send OTP email. Please contact admin.",
+        message: sendErr.message || "Failed to send OTP. Please try again.",
       });
     }
 
+    const maskedDest = via === "phone"
+      ? `*****${(user.phone || "").slice(-3)}`
+      : user.email;
+
     res.status(200).json({
       success: true,
-      message: `OTP sent to ${user.email}`,
+      message: `OTP sent to ${maskedDest}`,
     });
   } catch (error) {
     console.error("sendOtp error:", error);

@@ -99,8 +99,8 @@ export function AuthProvider({ children }) {
   };
 
   // ─── Send OTP ─────────────────────────────────────────────────────────
-  const sendOTP = async () => {
-    const { data } = await API.post("/vote/otp/send");
+  const sendOTP = async (via = "email") => {
+    const { data } = await API.post("/vote/otp/send", { via });
     return data;  // caller handles toast/message
   };
 

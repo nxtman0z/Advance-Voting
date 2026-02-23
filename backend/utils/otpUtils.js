@@ -41,38 +41,42 @@ if (sid.startsWith("AC") && process.env.TWILIO_AUTH_TOKEN) {
  * @param {string} otp
  * @param {string} purpose  - "verification" | "voting"
  */
-exports.sendOTP = async (email, phone, otp, purpose = "voting") => {
+/**
+ * via: "email" | "phone" | "both" (default: "both")
+ */
+exports.sendOTP = async (email, phone, otp, purpose = "voting", via = "both") => {
   const subject =
     purpose === "verification"
-      ? "Verify Your Blockchain Voting Account"
-      : "Your Voting OTP - Blockchain Voting System";
+      ? "Verify Your Pollaris Voting Account"
+      : "Your Voting OTP - Pollaris";
 
-  const emailHtml = generateEmailTemplate(otp, purpose);
-
-  console.log(`\n🔑 OTP generated for ${email}  (purpose: ${purpose})\n`);
+  const sendEmail = via === "email" || via === "both";
+  const sendSms   = via === "phone" || via === "both";
 
   // ─── Send via Gmail ────────────────────────────────────────────────────
-  const transporter = getTransporter();
-  const info = await transporter.sendMail({
-    from: `"Pollaris" <${process.env.EMAIL_USER}>`,
-    to: email,
-    subject,
-    html: emailHtml,
-  });
-  console.log(`✉️  OTP email sent to ${email}  [${info.response}]`);
+  if (sendEmail && email) {
+    const emailHtml = generateEmailTemplate(otp, purpose);
+    const transporter = getTransporter();
+    const info = await transporter.sendMail({
+      from: `"Pollaris" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject,
+      html: emailHtml,
+    });
+    console.log(`✉️  OTP email sent to ${email}  [${info.response}]`);
+  }
 
-  // ─── SMS via Twilio (optional) ────────────────────────────────────────
-  if (twilioClient && phone) {
-    try {
-      await twilioClient.messages.create({
-        body: `Your Blockchain Voting OTP is: ${otp}. Valid for 10 minutes. Do not share it.`,
-        from: process.env.TWILIO_PHONE_NUMBER,
-        to: phone,
-      });
-      console.log(`📱 OTP SMS sent to ${phone}`);
-    } catch (err) {
-      console.error("❌ SMS OTP failed:", err.message);
+  // ─── SMS via Twilio ────────────────────────────────────────────────────
+  if (sendSms && phone) {
+    if (!twilioClient) {
+      throw new Error("SMS service not configured. Please choose email OTP.");
     }
+    await twilioClient.messages.create({
+      body: `Your Pollaris voting OTP is: ${otp}. Valid for 10 minutes. Do not share it.`,
+      from: process.env.TWILIO_PHONE_NUMBER,
+      to: phone,
+    });
+    console.log(`📱 OTP SMS sent to ${phone}`);
   }
 };
 

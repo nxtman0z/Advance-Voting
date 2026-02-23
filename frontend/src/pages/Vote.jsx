@@ -16,7 +16,7 @@ const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 const UPLOADS_BASE = API_BASE.replace("/api", "") + "/uploads";
 
 // --- Step labels -------------------------------------------------------------
-const STEPS = ["Choose Party", "Face Verify", "Email OTP", "Confirm Vote", "Done!"];
+const STEPS = ["Choose Party", "Face Verify", "OTP Channel", "Verify OTP", "Confirm", "Done!"];
 
 // --- Face models loaded flag -------------------------------------------------
 let faceModelsLoaded = false;
@@ -55,6 +55,7 @@ export default function Vote() {
 
   // OTP
   const [otp,             setOtp]             = useState("");
+  const [otpVia,          setOtpVia]          = useState("email"); // "email" | "phone"
   const [otpSent,         setOtpSent]         = useState(false);
   const [otpSending,      setOtpSending]      = useState(false);
   const [otpVerifiedLocal, setOtpVerifiedLocal] = useState(false);
@@ -127,26 +128,11 @@ export default function Vote() {
     return () => { cancelled = true; };
   }, []);
 
-  // Auto-send OTP when entering step 2
+  // Reset OTP state when entering step 3 (OTP entry screen)
   useEffect(() => {
-    if (step !== 2) return;
-    // Reset OTP state on re-entry
+    if (step !== 3) return;
     setOtp("");
-    setOtpSent(false);
     setOtpVerifiedLocal(false);
-    // Auto-send OTP
-    (async () => {
-      setOtpSending(true);
-      try {
-        await sendOTP();
-        setOtpSent(true);
-        toast.success("OTP sent to your email! Check inbox.");
-      } catch (err) {
-        toast.error(err?.response?.data?.message || "Failed to send OTP. Click 'Resend'.");
-      } finally {
-        setOtpSending(false);
-      }
-    })();
   }, [step]);
 
   // Enter / leave face step
@@ -259,7 +245,7 @@ export default function Vote() {
         setFaceStatus("success");
         setFaceMessage(`Face matched! Similarity: ${score}%`);
         toast.success("Identity verified!");
-        setTimeout(() => { stopCamera(); setStep(2); }, 1500);
+        setTimeout(() => { stopCamera(); setStep(2); }, 1500); // → OTP Channel select
       } else {
         setFaceStatus("fail");
         setFaceMessage(`No match (${score}% similarity). Try better lighting, remove glasses, or move closer.`);
@@ -272,16 +258,15 @@ export default function Vote() {
   }, [user, stopCamera]);
 
   // --- OTP handling ---------------------------------------------------------
-  const handleSendOTP = async () => {
+  // Resend OTP (keeps same via channel)
+  const handleResendOTP = async () => {
     setOtpSending(true);
-    setOtpSent(false);
     setOtp("");
     try {
-      await sendOTP();
-      setOtpSent(true);
-      toast.success("OTP sent! Check your email inbox.");
+      const res = await sendOTP(otpVia);
+      toast.success(res?.message || `OTP resent to your ${otpVia === "phone" ? "phone" : "email"}!`);
     } catch (err) {
-      toast.error(err?.response?.data?.message || "Failed to send OTP");
+      toast.error(err?.response?.data?.message || "Failed to resend OTP");
     } finally {
       setOtpSending(false);
     }
@@ -297,7 +282,7 @@ export default function Vote() {
       await verifyOTP(otp);
       setOtpVerifiedLocal(true);
       toast.success("OTP verified!");
-      setTimeout(() => setStep(3), 800);
+      setTimeout(() => setStep(4), 800); // → Confirm
     } catch (err) {
       toast.error(err?.response?.data?.message || "Invalid or expired OTP");
     } finally {
@@ -315,7 +300,7 @@ export default function Vote() {
         partyId: selectedParty._id,
       });
       setTxHash(data.data.txHash);
-      setStep(4);
+      setStep(5);
       toast.success("Vote cast on blockchain!");
     } catch (err) {
       toast.error(err?.response?.data?.message || "Vote failed. Try again.");
@@ -509,66 +494,134 @@ export default function Vote() {
       </div>
     );
   }
-  // --- Step 2: Email OTP ----------------------------------------------------
-  function StepOTP() {
+  // --- Step 2: Choose OTP Channel ------------------------------------------
+  function StepChooseOTPChannel() {
+    const [channelSending, setChannelSending] = useState(false);
+    const hasPhone = !!user?.phone;
+
+    const handleChoose = async (via) => {
+      setChannelSending(true);
+      setOtpVia(via);
+      try {
+        const res = await sendOTP(via);
+        setOtpSent(true);
+        toast.success(res?.message || `OTP sent to your ${via === "phone" ? "phone" : "email"}!`);
+        setStep(3);
+      } catch (err) {
+        toast.error(err?.response?.data?.message || "Failed to send OTP. Try again.");
+      } finally {
+        setChannelSending(false);
+      }
+    };
+
     return (
-      <div className="max-w-sm mx-auto space-y-5">
+      <div className="max-w-sm mx-auto space-y-6">
         <div className="text-center">
-          <h3 className="text-xl font-bold text-white mb-1">Email OTP</h3>
-          <p className="text-slate-400 text-sm">
-            We'll send a one-time code to <span className="text-white">{user?.email}</span>
-          </p>
+          <h3 className="text-xl font-bold text-white mb-1">Choose OTP Delivery</h3>
+          <p className="text-slate-400 text-sm">Select where you want to receive your one-time password</p>
         </div>
 
-        {!otpSent ? (
-          <div className="text-center space-y-3">
-            {otpSending ? (
-              <div className="flex items-center justify-center gap-2 text-blue-300 text-sm">
-                <span className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
-                Sending OTP to your email...
-              </div>
-            ) : (
-              <button
-                onClick={handleSendOTP}
-                className="w-full py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm transition-colors"
-              >
-                Send OTP to Email
-              </button>
-            )}
-          </div>
-        ) : (
-          <>
-            <div>
-              <label className="block text-slate-400 text-xs mb-1">Enter 6-digit OTP</label>
-              <input
-                value={otp}
-                onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                placeholder="------"
-                className="w-full text-center text-2xl tracking-[0.5em] bg-slate-800 border border-slate-600/50 rounded-xl py-3 text-white focus:outline-none focus:border-blue-500"
-              />
+        <div className="space-y-3">
+          {/* Email card */}
+          <button
+            onClick={() => handleChoose("email")}
+            disabled={channelSending}
+            className="w-full flex items-center gap-4 p-4 bg-slate-800/60 border border-slate-600/50 hover:border-blue-500/60 hover:bg-slate-800 rounded-2xl transition-all text-left disabled:opacity-60 group"
+          >
+            <div className="w-12 h-12 rounded-xl bg-blue-600/20 border border-blue-500/30 flex items-center justify-center flex-shrink-0 text-blue-400 text-xl group-hover:bg-blue-600/30 transition-colors">
+              ✉️
             </div>
-            <button
-              onClick={handleVerifyOTP}
-              disabled={otpVerifying || otp.length !== 6}
-              className="w-full py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm transition-colors disabled:opacity-60"
-            >
-              {otpVerifying ? "Verifying..." : "Verify OTP"}
-            </button>
-            <button
-              onClick={handleSendOTP}
-              disabled={otpSending}
-              className="w-full text-slate-500 text-xs hover:text-slate-300 transition-colors disabled:opacity-40"
-            >
-              {otpSending ? "Sending..." : " Resend OTP"}
-            </button>
-          </>
+            <div className="flex-1 min-w-0">
+              <p className="text-white font-semibold text-sm">Via Email</p>
+              <p className="text-slate-400 text-xs truncate">{user?.email}</p>
+            </div>
+            <span className="text-slate-500 text-lg">›</span>
+          </button>
+
+          {/* Phone card */}
+          <button
+            onClick={() => handleChoose("phone")}
+            disabled={channelSending || !hasPhone}
+            className={`w-full flex items-center gap-4 p-4 bg-slate-800/60 border rounded-2xl transition-all text-left group ${
+              hasPhone
+                ? "border-slate-600/50 hover:border-purple-500/60 hover:bg-slate-800 disabled:opacity-60"
+                : "border-slate-700/30 opacity-40 cursor-not-allowed"
+            }`}
+          >
+            <div className="w-12 h-12 rounded-xl bg-purple-600/20 border border-purple-500/30 flex items-center justify-center flex-shrink-0 text-purple-400 text-xl group-hover:bg-purple-600/30 transition-colors">
+              📱
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-white font-semibold text-sm">Via Phone (SMS)</p>
+              <p className="text-slate-400 text-xs">
+                {hasPhone ? `*****${user.phone.slice(-3)}` : "No phone number on file"}
+              </p>
+            </div>
+            {hasPhone && <span className="text-slate-500 text-lg">›</span>}
+          </button>
+        </div>
+
+        {channelSending && (
+          <div className="flex items-center justify-center gap-2 text-blue-300 text-sm">
+            <span className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
+            Sending OTP...
+          </div>
         )}
 
         <button
           onClick={() => setStep(1)}
-          className="w-full text-slate-500 text-xs hover:text-slate-300 transition-colors"
+          disabled={channelSending}
+          className="w-full text-slate-500 text-xs hover:text-slate-300 transition-colors disabled:opacity-40"
         >
           Back to face verification
+        </button>
+      </div>
+    );
+  }
+
+  // --- Step 3: Enter OTP ---------------------------------------------------
+  function StepOTP() {
+    const destLabel = otpVia === "phone"
+      ? `phone (*****${(user?.phone || "").slice(-3)})`
+      : `email (${user?.email})`;
+
+    return (
+      <div className="max-w-sm mx-auto space-y-5">
+        <div className="text-center">
+          <h3 className="text-xl font-bold text-white mb-1">Enter OTP</h3>
+          <p className="text-slate-400 text-sm">
+            We sent a 6-digit code to your <span className="text-white">{destLabel}</span>
+          </p>
+        </div>
+
+        <div>
+          <label className="block text-slate-400 text-xs mb-1">6-digit OTP</label>
+          <input
+            value={otp}
+            onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+            placeholder="------"
+            className="w-full text-center text-2xl tracking-[0.5em] bg-slate-800 border border-slate-600/50 rounded-xl py-3 text-white focus:outline-none focus:border-blue-500"
+          />
+        </div>
+        <button
+          onClick={handleVerifyOTP}
+          disabled={otpVerifying || otp.length !== 6}
+          className="w-full py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm transition-colors disabled:opacity-60"
+        >
+          {otpVerifying ? "Verifying..." : "Verify OTP"}
+        </button>
+        <button
+          onClick={handleResendOTP}
+          disabled={otpSending}
+          className="w-full text-slate-500 text-xs hover:text-slate-300 transition-colors disabled:opacity-40"
+        >
+          {otpSending ? "Sending..." : "Resend OTP"}
+        </button>
+        <button
+          onClick={() => setStep(2)}
+          className="w-full text-slate-500 text-xs hover:text-slate-300 transition-colors"
+        >
+          Change delivery method
         </button>
       </div>
     );
@@ -668,9 +721,10 @@ export default function Vote() {
   const stepComponents = [
     <StepChooseParty key="s0" />,
     <StepFaceVerify key="s1" />,
-    <StepOTP key="s2" />,
-    <StepConfirm key="s3" />,
-    <StepDone key="s4" />,
+    <StepChooseOTPChannel key="s2" />,
+    <StepOTP key="s3" />,
+    <StepConfirm key="s4" />,
+    <StepDone key="s5" />,
   ];
 
   return (
