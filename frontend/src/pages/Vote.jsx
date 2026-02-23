@@ -15,10 +15,10 @@ import toast from "react-hot-toast";
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 const UPLOADS_BASE = API_BASE.replace("/api", "") + "/uploads";
 
-// Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬ Step labels Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬
+// --- Step labels -------------------------------------------------------------
 const STEPS = ["Choose Party", "Face Verify", "Email OTP", "Confirm Vote", "Done!"];
 
-// Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬ Face models loaded flag Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬
+// --- Face models loaded flag -------------------------------------------------
 let faceModelsLoaded = false;
 async function loadFaceModels() {
   if (faceModelsLoaded) return;
@@ -271,7 +271,7 @@ export default function Vote() {
     }
   }, [user, stopCamera]);
 
-  // Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬ OTP handling Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬
+  // --- OTP handling ---------------------------------------------------------
   const handleSendOTP = async () => {
     setOtpSending(true);
     setOtpSent(false);
@@ -305,7 +305,7 @@ export default function Vote() {
     }
   };
 
-  // Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬ Cast vote Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬
+  // --- Cast vote -------------------------------------------------------------
   const handleCastVote = async () => {
     if (!selectedElection || !selectedParty) return;
     setCasting(true);
@@ -324,7 +324,7 @@ export default function Vote() {
     }
   };
 
-  // Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬ Step 0: Choose party Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬
+  // --- Step 0: Choose party -------------------------------------------------
   function StepChooseParty() {
     if (loadingElections)
       return (
@@ -350,7 +350,7 @@ export default function Vote() {
               <p className="text-slate-400 text-sm">{election.state} · Ends {new Date(election.endTime).toLocaleDateString()}</p>
               {election.alreadyVoted && (
                 <span className="mt-2 inline-block text-xs bg-green-600/20 border border-green-500/40 text-green-300 px-3 py-1 rounded-full">
-                  Ã¢Åâ You already voted in this election
+                  v You already voted in this election
                 </span>
               )}
             </div>
@@ -421,7 +421,7 @@ export default function Vote() {
         <div className="grid grid-cols-2 gap-3">
           {/* Live camera */}
           <div className="space-y-1">
-            <p className="text-xs text-slate-500 text-center">ð· Live Camera</p>
+            <p className="text-xs text-slate-500 text-center"> Live Camera</p>
             <div className="relative rounded-xl overflow-hidden bg-slate-900 aspect-square border-2 border-slate-700">
               <video ref={videoRefCallback} autoPlay muted playsInline className="w-full h-full object-cover" />
               {/* Face guide oval */}
@@ -433,12 +433,12 @@ export default function Vote() {
 
           {/* Snapshot / placeholder */}
           <div className="space-y-1">
-            <p className="text-xs text-slate-500 text-center">ð¼ Captured</p>
+            <p className="text-xs text-slate-500 text-center"> Captured</p>
             <div className="rounded-xl overflow-hidden bg-slate-900 aspect-square border-2 border-slate-700 flex items-center justify-center">
               {snapDataUrl ? (
                 <img src={snapDataUrl} alt="snapshot" className="w-full h-full object-cover" />
               ) : (
-                <span className="text-slate-600 text-3xl">ð¸</span>
+                <span className="text-slate-600 text-3xl"></span>
               )}
             </div>
           </div>
@@ -498,8 +498,8 @@ export default function Vote() {
           >
             {busy    ? "Verifying..."  :
              success ? " Verified!" :
-             failed  ? "ð Retake & Verify" :
-                       "ð¸ Capture & Verify"}
+             failed  ? " Retake & Verify" :
+                       " Capture & Verify"}
           </button>
         </div>
 
@@ -509,7 +509,7 @@ export default function Vote() {
       </div>
     );
   }
-  // Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬ Step 2: Email OTP Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬
+  // --- Step 2: Email OTP ----------------------------------------------------
   function StepOTP() {
     return (
       <div className="max-w-sm mx-auto space-y-5">
@@ -543,7 +543,7 @@ export default function Vote() {
               <input
                 value={otp}
                 onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                placeholder="Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬"
+                placeholder="------"
                 className="w-full text-center text-2xl tracking-[0.5em] bg-slate-800 border border-slate-600/50 rounded-xl py-3 text-white focus:outline-none focus:border-blue-500"
               />
             </div>
@@ -559,7 +559,7 @@ export default function Vote() {
               disabled={otpSending}
               className="w-full text-slate-500 text-xs hover:text-slate-300 transition-colors disabled:opacity-40"
             >
-              {otpSending ? "Sending..." : "âº Resend OTP"}
+              {otpSending ? "Sending..." : " Resend OTP"}
             </button>
           </>
         )}
@@ -568,13 +568,13 @@ export default function Vote() {
           onClick={() => setStep(1)}
           className="w-full text-slate-500 text-xs hover:text-slate-300 transition-colors"
         >
-          Ã¢â Â Back to face verification
+          <- Back to face verification
         </button>
       </div>
     );
   }
 
-  // Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬ Step 3: Confirm vote Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬
+  // --- Step 3: Confirm vote -------------------------------------------------
   function StepConfirm() {
     return (
       <div className="max-w-sm mx-auto space-y-6">
@@ -608,7 +608,7 @@ export default function Vote() {
             onClick={() => setStep(0)}
             className="flex-1 py-2.5 rounded-lg border border-slate-600/50 text-slate-300 hover:bg-slate-700/50 transition-colors text-sm"
           >
-            Ã¢â Â Change Vote
+            <- Change Vote
           </button>
           <button
             onClick={handleCastVote}
@@ -629,12 +629,12 @@ export default function Vote() {
     );
   }
 
-  // Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬ Step 4: Done Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬
+  // --- Step 4: Done ---------------------------------------------------------
   function StepDone() {
     return (
       <div className="max-w-sm mx-auto text-center space-y-5">
         <div className="w-20 h-20 bg-green-600/20 border-2 border-green-500/40 rounded-full flex items-center justify-center mx-auto">
-          <span className="text-4xl">Ã¢Åâ</span>
+          <span className="text-4xl">v</span>
         </div>
         <h3 className="text-2xl font-bold text-white">Vote Cast Successfully!</h3>
         <p className="text-slate-400 text-sm">
@@ -649,7 +649,7 @@ export default function Vote() {
             rel="noreferrer"
             className="block p-3 bg-slate-800/60 border border-slate-700/50 rounded-xl text-blue-400 hover:text-blue-300 text-xs break-all transition-colors"
           >
-            Ã°Å¸â- View transaction on Etherscan
+            - View transaction on Etherscan
             <br />
             <span className="text-slate-500">{txHash}</span>
           </a>
@@ -695,7 +695,7 @@ export default function Vote() {
                     : "bg-slate-800 border-slate-600 text-slate-500"
                 }`}
               >
-                {i < step ? "Ã¢Åâ" : i + 1}
+                {i < step ? "v" : i + 1}
               </div>
               <span className="text-xs mt-1 text-slate-400 hidden sm:block">{label}</span>
             </div>
