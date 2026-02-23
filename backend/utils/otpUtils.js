@@ -54,7 +54,7 @@ exports.sendOTP = async (email, phone, otp, purpose = "voting") => {
   // ─── Send via Gmail ────────────────────────────────────────────────────
   const transporter = getTransporter();
   const info = await transporter.sendMail({
-    from: `"BlockVote" <${process.env.EMAIL_USER}>`,
+    from: `"Pollaris" <${process.env.EMAIL_USER}>`,
     to: email,
     subject,
     html: emailHtml,

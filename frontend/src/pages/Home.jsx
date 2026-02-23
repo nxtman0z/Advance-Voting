@@ -29,11 +29,13 @@ export default function Home() {
         <div className="inline-flex items-center gap-2 bg-blue-500/10 border border-blue-500/30 text-blue-400 text-sm px-4 py-2 rounded-full mb-6">
           <SiEthereum /> Powered by Ethereum Blockchain
         </div>
-        <h1 className="text-5xl sm:text-6xl font-extrabold mb-6 leading-tight">
-          The Future of{" "}
-          <span className="gradient-text">Secure Voting</span>
+        <h1 className="text-5xl sm:text-6xl font-extrabold mb-4 leading-tight">
+          <span className="gradient-text">Pollaris</span>
         </h1>
-        <p className="text-xl text-slate-400 max-w-2xl mx-auto mb-10">
+        <p className="text-2xl text-slate-200 font-semibold max-w-2xl mx-auto mb-4">
+          Where Every Voice Finds Direction
+        </p>
+        <p className="text-lg text-slate-400 max-w-2xl mx-auto mb-10">
           Decentralized, transparent, and tamper-proof elections with facial recognition,{" "}
           OTP 2FA, and MetaMask wallet integration.
         </p>
@@ -75,7 +77,7 @@ export default function Home() {
       {/* ─── Features ───────────────────────────────────────────────────── */}
       <section className="py-16">
         <h2 className="text-3xl font-bold text-center text-white mb-12">
-          Why <span className="gradient-text">BlockVote</span>?
+          Why <span className="gradient-text">Pollaris</span>?
         </h2>
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {features.map((f) => (

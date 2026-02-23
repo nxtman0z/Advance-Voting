@@ -51,7 +51,7 @@ export default function AdminLogin() {
       const signer   = await provider.getSigner();
 
       // Create a unique timestamped message to prevent replay attacks
-      const message = `BlockVote Admin Login\nWallet: ${address}\nTimestamp: ${Date.now()}`;
+      const message = `Pollaris Admin Login\nWallet: ${address}\nTimestamp: ${Date.now()}`;
 
       const signature = await signer.signMessage(message);
 
