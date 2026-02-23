@@ -319,7 +319,9 @@ export default function Vote() {
         </div>
       );
 
-    if (elections.length === 0)
+    const openElections = elections.filter((e) => !e.alreadyVoted);
+
+    if (openElections.length === 0)
       return (
         <div className="text-center text-slate-400 py-16">
           No active elections available right now.
@@ -328,20 +330,14 @@ export default function Vote() {
 
     return (
       <div className="space-y-8">
-        {elections.map((election) => (
+        {openElections.map((election) => (
           <div key={election._id} className="bg-slate-800/60 border border-slate-700/50 rounded-2xl p-6">
             <div className="mb-4">
               <h3 className="text-lg font-bold text-white">{election.title}</h3>
               <p className="text-slate-400 text-sm">{election.state} | Ends {new Date(election.endTime).toLocaleDateString()}</p>
-              {election.alreadyVoted && (
-                <span className="mt-2 inline-block text-xs bg-green-600/20 border border-green-500/40 text-green-300 px-3 py-1 rounded-full">
-                  v You already voted in this election
-                </span>
-              )}
             </div>
 
-            {election.alreadyVoted ? null : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 {(election.parties || []).map((party) => (
                   <button
                     key={party._id}
@@ -381,7 +377,6 @@ export default function Vote() {
                   </button>
                 ))}
               </div>
-            )}
           </div>
         ))}
       </div>
@@ -685,28 +680,62 @@ export default function Vote() {
 
   // --- Step 4: Done ---------------------------------------------------------
   function StepDone() {
-    return (
-      <div className="max-w-sm mx-auto text-center space-y-5">
-        <div className="w-20 h-20 bg-green-600/20 border-2 border-green-500/40 rounded-full flex items-center justify-center mx-auto">
-          <span className="text-4xl">v</span>
-        </div>
-        <h3 className="text-2xl font-bold text-white">Vote Cast Successfully!</h3>
-        <p className="text-slate-400 text-sm">
-          Your vote for <span className="text-white font-medium">{selectedParty?.partyName}</span> has been
-          permanently recorded on the blockchain.
-        </p>
+    const copyTx = () => {
+      if (!txHash) return;
+      navigator.clipboard.writeText(txHash).then(() => toast.success("TX hash copied!"));
+    };
 
+    return (
+      <div className="max-w-md mx-auto text-center space-y-6">
+        {/* Success icon */}
+        <div className="w-20 h-20 bg-green-600/20 border-2 border-green-500/40 rounded-full flex items-center justify-center mx-auto">
+          <svg className="w-10 h-10 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+
+        <div>
+          <h3 className="text-2xl font-bold text-white">Vote Cast Successfully!</h3>
+          <p className="text-slate-400 text-sm mt-1">
+            Your vote for{" "}
+            <span className="text-white font-semibold">{selectedParty?.partyName}</span>{" "}
+            has been permanently recorded on the blockchain.
+          </p>
+        </div>
+
+        {/* TX block */}
         {txHash && (
-          <a
-            href={`https://sepolia.etherscan.io/tx/${txHash}`}
-            target="_blank"
-            rel="noreferrer"
-            className="block p-3 bg-slate-800/60 border border-slate-700/50 rounded-xl text-blue-400 hover:text-blue-300 text-xs break-all transition-colors"
-          >
-            - View transaction on Etherscan
-            <br />
-            <span className="text-slate-500">{txHash}</span>
-          </a>
+          <div className="bg-slate-800/60 border border-slate-700/50 rounded-2xl p-4 text-left space-y-3">
+            <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Blockchain Transaction</p>
+
+            {/* Hash display */}
+            <div className="bg-slate-900/60 rounded-xl px-3 py-2 flex items-center gap-2">
+              <span className="text-green-400 text-xs font-mono break-all flex-1">{txHash}</span>
+              <button
+                onClick={copyTx}
+                title="Copy TX hash"
+                className="shrink-0 text-slate-400 hover:text-white transition-colors p-1"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                  <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Etherscan button */}
+            <a
+              href={`https://sepolia.etherscan.io/tx/${txHash}`}
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center justify-center gap-2 w-full py-2 rounded-lg bg-blue-600/20 border border-blue-500/40 text-blue-400 hover:bg-blue-600/30 hover:text-blue-300 text-sm font-medium transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+              View on Etherscan (Sepolia)
+            </a>
+          </div>
         )}
 
         <button
