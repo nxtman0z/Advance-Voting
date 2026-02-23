@@ -159,11 +159,7 @@ exports.createElection = async (req, res) => {
       });
     }
 
-    // 1 — Deploy on-chain first
-    const { electionId: onChainId, txHash: deployTxHash } =
-      await createElectionOnChain(title, description || "", startTime, endTime);
-
-    // 2 — Save to MongoDB
+    // 1 — Save to MongoDB first (so election is always created)
     const election = await Election.create({
       title,
       description: description || "",
@@ -171,16 +167,30 @@ exports.createElection = async (req, res) => {
       startTime: new Date(startTime),
       endTime: new Date(endTime),
       status: "upcoming",
-      onChainId,
-      isBlockchainDeployed: true,
-      deployTxHash,
+      isBlockchainDeployed: false,
       contractAddress: process.env.CONTRACT_ADDRESS,
       createdBy: req.user.id,
     });
 
+    // 2 — Try blockchain deployment (non-blocking on failure)
+    try {
+      const { electionId: onChainId, txHash: deployTxHash } =
+        await createElectionOnChain(title, description || "", startTime, endTime);
+
+      election.onChainId = onChainId;
+      election.deployTxHash = deployTxHash;
+      election.isBlockchainDeployed = true;
+      await election.save();
+    } catch (chainErr) {
+      console.error("Blockchain deploy failed (election saved without on-chain ID):", chainErr.message);
+      // Election is still saved in MongoDB — admin can retry blockchain deployment later
+    }
+
     res.status(201).json({
       success: true,
-      message: "Election created on blockchain and saved",
+      message: election.isBlockchainDeployed
+        ? "Election created and deployed on blockchain"
+        : "Election created (blockchain deployment pending)",
       data: election,
     });
   } catch (err) {
@@ -270,12 +280,6 @@ exports.addParty = async (req, res) => {
     if (!election)
       return res.status(404).json({ success: false, message: "Election not found" });
 
-    if (!election.isBlockchainDeployed || election.onChainId == null)
-      return res.status(400).json({
-        success: false,
-        message: "Election must be deployed to blockchain first",
-      });
-
     const { partyName, candidateName, candidateBio } = req.body;
     if (!partyName || !candidateName) {
       return res.status(400).json({
@@ -296,19 +300,10 @@ exports.addParty = async (req, res) => {
     const partyImageFile = files.partyImage ? files.partyImage[0].filename : null;
     const candidatePhotoFile = files.candidatePhoto ? files.candidatePhoto[0].filename : null;
 
-    // ── Add on-chain ────────────────────────────────────────────────────────
-    const { candidateId: onChainCandidateId, txHash } = await addCandidateOnChain(
-      election.onChainId,
-      candidateName,
-      partyName,
-      partySymbolFile // use filename as imageHash (on-chain stores string)
-    );
-
-    // ── Save to MongoDB ─────────────────────────────────────────────────────
+    // ── Save to MongoDB first ───────────────────────────────────────────────
     const party = await Party.create({
       election: election._id,
-      onChainElectionId: election.onChainId,
-      onChainCandidateId,
+      onChainElectionId: election.onChainId || null,
       partyName,
       partySymbol: partySymbolFile,
       partyImage: partyImageFile,
@@ -317,11 +312,33 @@ exports.addParty = async (req, res) => {
       candidatePhoto: candidatePhotoFile,
     });
 
+    // ── Try blockchain (non-blocking on failure) ────────────────────────────
+    if (election.isBlockchainDeployed && election.onChainId != null) {
+      try {
+        const { candidateId: onChainCandidateId, txHash } = await addCandidateOnChain(
+          election.onChainId,
+          candidateName,
+          partyName,
+          partySymbolFile
+        );
+        party.onChainCandidateId = onChainCandidateId;
+        await party.save();
+
+        return res.status(201).json({
+          success: true,
+          message: `Party "${partyName}" added successfully`,
+          data: party,
+          txHash,
+        });
+      } catch (chainErr) {
+        console.error("addParty blockchain error (party saved without on-chain ID):", chainErr.message);
+      }
+    }
+
     res.status(201).json({
       success: true,
-      message: `Party "${partyName}" added (on-chain candidateId: ${onChainCandidateId})`,
+      message: `Party "${partyName}" added successfully`,
       data: party,
-      txHash,
     });
   } catch (err) {
     console.error("addParty error:", err);

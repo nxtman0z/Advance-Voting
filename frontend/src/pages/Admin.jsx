@@ -433,9 +433,9 @@ function TabAddParty({ API }) {
   useEffect(() => {
     API.get("/admin/elections")
       .then(({ data }) => {
-        const deployed = (data.data || []).filter((e) => e.isBlockchainDeployed);
-        setElections(deployed);
-        if (deployed.length > 0) setSelectedElectionId(deployed[0]._id);
+        const all = data.data || [];
+        setElections(all);
+        if (all.length > 0) setSelectedElectionId(all[0]._id);
       })
       .catch(() => toast.error("Failed to load elections"));
   }, []);
