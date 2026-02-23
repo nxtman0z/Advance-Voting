@@ -1,7 +1,7 @@
 /**
  * Admin.jsx  -  full admin panel with 3 tabs:
  *   1. Dashboard (stats + elections + party vote counts)
- *   2. Create Election (form Ã¢â â blockchain + MongoDB)
+ *   2. Create Election (form -> blockchain + MongoDB)
  *   3. Add Party / Candidate (select election, upload images)
  */
 import { useState, useEffect, useRef } from "react";
@@ -20,7 +20,7 @@ export default function Admin() {
   if (user?.role !== "admin") {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] text-slate-400">
-        <span className="text-5xl mb-4"></span>
+        <div className="text-5xl mb-4 font-bold text-red-400">X</div>
         <h2 className="text-xl font-bold text-white">Access Denied</h2>
         <p className="mt-2">You need admin privileges.</p>
       </div>
@@ -31,7 +31,7 @@ export default function Admin() {
     <div className="max-w-6xl mx-auto px-4 py-10">
       {/* Header */}
       <div className="mb-8 flex items-center gap-3">
-        <div className="w-10 h-10 bg-purple-600 rounded-xl flex items-center justify-center text-2xl"></div>
+        <div className="w-10 h-10 bg-purple-600 rounded-xl flex items-center justify-center text-sm font-bold text-white">A</div>
         <div>
           <h1 className="text-2xl font-bold text-white">Admin Panel</h1>
           <p className="text-slate-400 text-sm">Manage elections, parties and vote counts</p>
@@ -143,7 +143,7 @@ function TabDashboard({ API }) {
                 <div>
                   <h3 className="font-bold text-white text-lg">{election.title}</h3>
                   <p className="text-slate-400 text-sm">
-                    {election.state} · onChainId: #{election.onChainId ?? "-"} · {election.totalVotes} votes
+                    {election.state} | onChainId: #{election.onChainId ?? "-"} | {election.totalVotes} votes
                   </p>
                   <p className="text-slate-500 text-xs">
                     {new Date(election.startTime).toLocaleDateString()} - {new Date(election.endTime).toLocaleDateString()}
@@ -227,7 +227,7 @@ function TabDashboard({ API }) {
                 )}
                 <div>
                   <p className="text-white text-sm font-medium">{u.fullName}</p>
-                  <p className="text-slate-500 text-xs">{u.email} · {new Date(u.createdAt).toLocaleDateString()}</p>
+                  <p className="text-slate-500 text-xs">{u.email} | {new Date(u.createdAt).toLocaleDateString()}</p>
                 </div>
               </div>
             ))}
@@ -318,7 +318,7 @@ function TabCreateElection({ API, onCreated }) {
         </div>
 
         <div className="bg-blue-600/10 border border-blue-500/30 rounded-lg p-3 text-sm text-blue-300">
-          Warning:️ Creating will deploy the election to the Sepolia blockchain immediately. This may take 15-30 seconds.
+          Warning: Creating will deploy the election to the Sepolia blockchain immediately. This may take 15-30 seconds.
         </div>
 
         <button
@@ -474,7 +474,7 @@ function TabAddParty({ API }) {
         />
 
         <div className="bg-yellow-600/10 border border-yellow-500/30 rounded-lg p-3 text-sm text-yellow-300">
-          Warning:️ Adding a party will call <code>addCandidate</code> on the blockchain. This requires gas and takes ~15 seconds.
+          Warning: Adding a party will call <code>addCandidate</code> on the blockchain. This requires gas and takes ~15 seconds.
         </div>
 
         <button
@@ -579,7 +579,7 @@ function TabVoters({ API }) {
       {/* Search + Filters */}
       <div className="flex flex-wrap gap-3">
         <div className="relative flex-1 min-w-60">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm"></span>
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">*</span>
           <input
             type="text" value={search} onChange={(e) => handleSearch(e.target.value)}
             placeholder="Search name, email, phone, Voter ID..."
@@ -731,7 +731,7 @@ function ImageUpload({ label, preview, onChange, round = false }) {
           />
         ) : (
           <div className="text-slate-500 text-sm">
-            <div className="text-3xl mb-1"></div>
+            <div className="text-3xl mb-1 text-slate-400">+</div>
             Click to upload
           </div>
         )}

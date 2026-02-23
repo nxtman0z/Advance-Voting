@@ -347,7 +347,7 @@ export default function Vote() {
           <div key={election._id} className="bg-slate-800/60 border border-slate-700/50 rounded-2xl p-6">
             <div className="mb-4">
               <h3 className="text-lg font-bold text-white">{election.title}</h3>
-              <p className="text-slate-400 text-sm">{election.state} · Ends {new Date(election.endTime).toLocaleDateString()}</p>
+              <p className="text-slate-400 text-sm">{election.state} | Ends {new Date(election.endTime).toLocaleDateString()}</p>
               {election.alreadyVoted && (
                 <span className="mt-2 inline-block text-xs bg-green-600/20 border border-green-500/40 text-green-300 px-3 py-1 rounded-full">
                   v You already voted in this election
@@ -677,7 +677,7 @@ export default function Vote() {
     <div className="min-h-screen px-4 py-10 max-w-4xl mx-auto">
       {/* Title */}
       <h1 className="text-3xl font-bold text-white text-center mb-2">Cast Your Vote</h1>
-      <p className="text-slate-400 text-center mb-8">Secure · Verified · Blockchain-Recorded</p>
+      <p className="text-slate-400 text-center mb-8">Secure | Verified | Blockchain-Recorded</p>
 
       {/* Step indicator */}
       <div className="flex items-center justify-center mb-10 gap-0">
