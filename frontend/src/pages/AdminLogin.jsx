@@ -65,10 +65,6 @@ export default function AdminLogin() {
     <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4 py-10">
       <div className="w-full max-w-lg animate-fadeInUp">
 
-        {/* â”€â”€ Back link â”€â”€ */}
-        <Link to="/" className="inline-flex items-center gap-1.5 text-slate-500 hover:text-slate-300 text-sm mb-6 transition-colors">
-          <FiArrowLeft size={14} /> Back to Home
-        </Link>
 
         {/* â”€â”€ Header â”€â”€ */}
         <div className="flex items-center gap-4 mb-8">
@@ -138,15 +134,6 @@ export default function AdminLogin() {
                   </div>
                 </div>
 
-                {/* Feature pills */}
-                <div className="grid grid-cols-3 gap-2 text-center">
-                  {[["ðŸ”", "Encrypted"], ["âš¡", "No Gas Fee"], ["ðŸ›¡ï¸", "Signature Auth"]].map(([icon, label]) => (
-                    <div key={label} className="bg-slate-800/60 border border-slate-700/40 rounded-xl py-2.5 px-1">
-                      <div className="text-lg mb-0.5">{icon}</div>
-                      <div className="text-xs text-slate-400 font-medium">{label}</div>
-                    </div>
-                  ))}
-                </div>
 
                 <button
                   onClick={handleConnect}
@@ -225,6 +212,13 @@ export default function AdminLogin() {
 
           {/* bottom accent */}
           <div className="h-px bg-gradient-to-r from-transparent via-slate-700 to-transparent" />
+        </div>
+
+        {/* Back to Home */}
+        <div className="text-center mt-5">
+          <Link to="/" className="inline-flex items-center gap-1.5 text-slate-500 hover:text-slate-300 text-sm transition-colors">
+            <FiArrowLeft size={14} /> Back to Home
+          </Link>
         </div>
 
       </div>
