@@ -597,6 +597,7 @@ export default function Vote() {
         <div>
           <label className="block text-slate-400 text-xs mb-1">6-digit OTP</label>
           <input
+            autoFocus
             value={otp}
             onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
             placeholder="------"
@@ -718,15 +719,6 @@ export default function Vote() {
     );
   }
 
-  const stepComponents = [
-    <StepChooseParty key="s0" />,
-    <StepFaceVerify key="s1" />,
-    <StepChooseOTPChannel key="s2" />,
-    <StepOTP key="s3" />,
-    <StepConfirm key="s4" />,
-    <StepDone key="s5" />,
-  ];
-
   return (
     <div className="min-h-screen px-4 py-10 max-w-4xl mx-auto">
       {/* Title */}
@@ -766,7 +758,12 @@ export default function Vote() {
 
       {/* Content */}
       <div className="bg-slate-800/40 border border-slate-700/40 rounded-2xl p-6">
-        {stepComponents[step]}
+        {step === 0 && StepChooseParty()}
+        {step === 1 && StepFaceVerify()}
+        {step === 2 && StepChooseOTPChannel()}
+        {step === 3 && StepOTP()}
+        {step === 4 && StepConfirm()}
+        {step === 5 && StepDone()}
       </div>
     </div>
   );
