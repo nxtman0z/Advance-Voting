@@ -8,8 +8,8 @@ const partySchema = new mongoose.Schema(
       ref: "Election",
       required: true,
     },
-    onChainElectionId: { type: Number, required: true },
-    onChainCandidateId: { type: Number, default: null }, // set after blockchain add
+    onChainElectionId: { type: Number, default: null },
+    onChainCandidateId: { type: Number, default: null },
 
     // ─── Party Details ───────────────────────────────────────────────────
     partyName: {
