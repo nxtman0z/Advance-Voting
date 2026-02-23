@@ -3,11 +3,10 @@
  * Flow: Connect Wallet → Sign Message → Backend verifies → Admin Dashboard
  */
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { SiEthereum } from "react-icons/si";
 import { FiShield, FiCheckCircle, FiAlertCircle, FiArrowLeft, FiZap } from "react-icons/fi";
-import { Link } from "react-router-dom";
 import toast from "react-hot-toast";
 
 const STEPS = ["Connect Wallet", "Sign Message", "Access Granted"];
