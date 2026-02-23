@@ -1,9 +1,11 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { useState, useCallback } from "react";
 import { Toaster } from "react-hot-toast";
 import { AuthProvider } from "./context/AuthContext";
 import { Web3Provider } from "./context/Web3Context";
 
 import Navbar from "./components/Navbar";
+import SplashScreen from "./components/SplashScreen";
 import Home from "./pages/Home";
 import Register from "./pages/Register";
 import Login from "./pages/Login";
@@ -18,7 +20,14 @@ import { useAuth } from "./context/AuthContext";
 // ─── Protected Route Wrapper ──────────────────────────────────────────────────
 const ProtectedRoute = ({ children, adminOnly = false, voterOnly = false }) => {
   const { user, loading } = useAuth();
-  if (loading) return <div className="flex items-center justify-center h-screen text-white">Loading...</div>;
+  if (loading) return (
+    <div className="flex flex-col items-center justify-center h-screen gap-4">
+      <img src="/logo.png" alt="Pollaris" className="w-16 h-16 rounded-2xl animate-pulse" />
+      <div className="w-32 h-1 bg-slate-700 rounded-full overflow-hidden">
+        <div className="h-full bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full animate-[loading_1.2s_ease-in-out_infinite]" style={{width:"60%"}} />
+      </div>
+    </div>
+  );
   if (!user) return <Navigate to="/login" replace />;
   if (adminOnly && user.role !== "admin") return <Navigate to="/dashboard" replace />;
   if (voterOnly && user.role === "admin") return <Navigate to="/admin" replace />;
@@ -48,9 +57,9 @@ function AppRoutes() {
           backgroundImage: "url('/logo.png')",
           backgroundRepeat: "no-repeat",
           backgroundPosition: "center center",
-          backgroundSize: "420px",
-          opacity: 0.04,
-          filter: "blur(2px)",
+          backgroundSize: "600px",
+          opacity: 0.07,
+          filter: "blur(0.5px)",
         }}
       />
       <Navbar />
@@ -100,10 +109,14 @@ function AppRoutes() {
 }
 
 export default function App() {
+  const [splashDone, setSplashDone] = useState(false);
+  const handleSplashDone = useCallback(() => setSplashDone(true), []);
+
   return (
     <Router>
       <AuthProvider>
         <Web3Provider>
+          {!splashDone && <SplashScreen onDone={handleSplashDone} />}
           <AppRoutes />
         </Web3Provider>
       </AuthProvider>
