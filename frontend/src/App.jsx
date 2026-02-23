@@ -16,11 +16,12 @@ import AdminLogin from "./pages/AdminLogin";
 import { useAuth } from "./context/AuthContext";
 
 // ─── Protected Route Wrapper ──────────────────────────────────────────────────
-const ProtectedRoute = ({ children, adminOnly = false }) => {
+const ProtectedRoute = ({ children, adminOnly = false, voterOnly = false }) => {
   const { user, loading } = useAuth();
   if (loading) return <div className="flex items-center justify-center h-screen text-white">Loading...</div>;
   if (!user) return <Navigate to="/login" replace />;
   if (adminOnly && user.role !== "admin") return <Navigate to="/dashboard" replace />;
+  if (voterOnly && user.role === "admin") return <Navigate to="/admin" replace />;
   return children;
 };
 
@@ -28,8 +29,9 @@ function AppRoutes() {
   const { user } = useAuth();
 
   // Redirect logged-in users away from /login and /register
+  // Admin goes to /admin, voters go to /dashboard
   const AuthRedirect = ({ children }) => {
-    if (user) return <Navigate to="/dashboard" replace />;
+    if (user) return <Navigate to={user.role === "admin" ? "/admin" : "/dashboard"} replace />;
     return children;
   };
 
@@ -46,7 +48,7 @@ function AppRoutes() {
           <Route
             path="/dashboard"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute voterOnly>
                 <Dashboard />
               </ProtectedRoute>
             }
@@ -54,7 +56,7 @@ function AppRoutes() {
           <Route
             path="/vote"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute voterOnly>
                 <Vote />
               </ProtectedRoute>
             }

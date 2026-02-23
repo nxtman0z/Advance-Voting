@@ -14,8 +14,10 @@ export default function Navbar() {
     { label: "Home", path: "/" },
     { label: "Vote", path: "/vote", protected: true, voterOnly: true },
     { label: "Results", path: "/results" },
-    { label: "Dashboard", path: "/dashboard", protected: true },
-    ...(user?.role === "admin" ? [{ label: "Admin", path: "/admin" }] : []),
+    ...(user?.role === "admin"
+      ? [{ label: "Admin Panel", path: "/admin", protected: true }]
+      : [{ label: "Dashboard", path: "/dashboard", protected: true }]
+    ),
   ];
 
   const handleLogout = async () => {
@@ -86,9 +88,9 @@ export default function Navbar() {
                     </div>
                     <button
                       className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 rounded-lg transition-colors"
-                      onClick={() => { setDropdownOpen(false); navigate("/dashboard"); }}
+                      onClick={() => { setDropdownOpen(false); navigate(user?.role === "admin" ? "/admin" : "/dashboard"); }}
                     >
-                      <FiUser /> Dashboard
+                      <FiUser /> {user?.role === "admin" ? "Admin Panel" : "Dashboard"}
                     </button>
                     <button
                       className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
