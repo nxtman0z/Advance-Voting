@@ -76,8 +76,8 @@ export default function AdminLogin() {
 
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-purple-600/30">
-            <FiShield size={30} className="text-white" />
+          <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4">
+            <img src="/logo.png" alt="Pollaris" className="w-16 h-16 rounded-2xl object-contain shadow-lg shadow-purple-600/30" />
           </div>
           <h1 className="text-3xl font-bold text-white"><span className="text-purple-400">Pollaris</span> Admin</h1>
           <p className="text-slate-400 mt-1">Verify your identity with MetaMask</p>

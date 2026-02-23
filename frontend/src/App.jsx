@@ -37,8 +37,24 @@ function AppRoutes() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 text-white">
+      {/* ─── Global Logo Watermark ─────────────────────────────────────── */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: "fixed",
+          inset: 0,
+          zIndex: 0,
+          pointerEvents: "none",
+          backgroundImage: "url('/logo.png')",
+          backgroundRepeat: "no-repeat",
+          backgroundPosition: "center center",
+          backgroundSize: "420px",
+          opacity: 0.04,
+          filter: "blur(2px)",
+        }}
+      />
       <Navbar />
-      <main className="pt-16">
+      <main className="pt-16" style={{ position: "relative", zIndex: 1 }}>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/register" element={<AuthRedirect><Register /></AuthRedirect>} />
