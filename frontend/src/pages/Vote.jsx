@@ -485,7 +485,7 @@ export default function Vote() {
             disabled={busy || success}
             className="px-4 py-2.5 rounded-xl border border-slate-600/50 text-slate-300 hover:bg-slate-700/50 transition-colors text-sm disabled:opacity-40"
           >
-            < Back
+            Back
           </button>
           <button
             onClick={handleCapture}

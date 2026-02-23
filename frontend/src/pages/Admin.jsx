@@ -681,9 +681,9 @@ function TabVoters({ API }) {
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-2 pt-4">
-          <button onClick={() => { const p = Math.max(1, page-1); setPage(p); load(search, gender, status, p); }} disabled={page===1} className="px-3 py-1.5 text-sm bg-slate-800 border border-slate-700/50 text-slate-300 rounded-lg hover:bg-slate-700 disabled:opacity-40">< Prev</button>
+          <button onClick={() => { const p = Math.max(1, page-1); setPage(p); load(search, gender, status, p); }} disabled={page===1} className="px-3 py-1.5 text-sm bg-slate-800 border border-slate-700/50 text-slate-300 rounded-lg hover:bg-slate-700 disabled:opacity-40">Prev</button>
           <span className="text-slate-400 text-sm">{page} / {totalPages}</span>
-          <button onClick={() => { const p = Math.min(totalPages, page+1); setPage(p); load(search, gender, status, p); }} disabled={page===totalPages} className="px-3 py-1.5 text-sm bg-slate-800 border border-slate-700/50 text-slate-300 rounded-lg hover:bg-slate-700 disabled:opacity-40">Next -></button>
+          <button onClick={() => { const p = Math.min(totalPages, page+1); setPage(p); load(search, gender, status, p); }} disabled={page===totalPages} className="px-3 py-1.5 text-sm bg-slate-800 border border-slate-700/50 text-slate-300 rounded-lg hover:bg-slate-700 disabled:opacity-40">Next</button>
         </div>
       )}
     </div>
