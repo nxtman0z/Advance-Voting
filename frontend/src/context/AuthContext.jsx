@@ -9,12 +9,27 @@ const API = axios.create({
   withCredentials: true,
 });
 
-// Attach token automatically
+// Attach token to every request
 API.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
+
+// Auto-logout on 401 (expired/invalidated token)
+API.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem("token");
+      // Reload to reset all React state and redirect to home
+      if (window.location.pathname !== "/login" && window.location.pathname !== "/") {
+        window.location.href = "/";
+      }
+    }
+    return Promise.reject(error);
+  }
+);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);

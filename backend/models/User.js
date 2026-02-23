@@ -136,6 +136,10 @@ const userSchema = new mongoose.Schema(
     passwordResetExpires: { type: Date, select: false },
 
     lastLogin: { type: Date },
+
+    // ─── Token Invalidation ──────────────────────────────────────────────
+    // Incremented on logout → all previously issued tokens become invalid immediately
+    tokenVersion: { type: Number, default: 0 },
   },
   {
     timestamps: true,

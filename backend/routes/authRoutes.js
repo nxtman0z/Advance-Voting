@@ -4,11 +4,29 @@ const authController = require("../controllers/authController");
 const { protect } = require("../middleware/authMiddleware");
 const { registerFace } = require("../middleware/faceVerifyMiddleware");
 const upload = require("../middleware/upload");
+const rateLimit = require("express-rate-limit");
 
-// ─── Public Routes ───────────────────────────────────────────────────────────
-router.post("/register", upload.upload.single("photo"), authController.register);
-router.post("/login", authController.login);
-router.post("/admin-wallet-login", authController.adminWalletLogin);
+// ─── Rate Limiters ────────────────────────────────────────────────────────
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10,                  // max 10 login attempts per IP per window
+  message: { success: false, message: "Too many login attempts. Please try again after 15 minutes." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const registerLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 5,                   // max 5 registrations per IP per hour
+  message: { success: false, message: "Too many registration attempts. Please try again later." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// ─── Public Routes ─────────────────────────────────────────────────────────────
+router.post("/register", registerLimiter, upload.upload.single("photo"), authController.register);
+router.post("/login", loginLimiter, authController.login);
+router.post("/admin-wallet-login", loginLimiter, authController.adminWalletLogin);
 
 // ─── Protected Routes ─────────────────────────────────────────────────────────
 router.use(protect); // All routes below require authentication

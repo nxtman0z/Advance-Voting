@@ -4,18 +4,20 @@ const crypto = require("crypto");
 const { sendOTP } = require("../utils/otpUtils");
 
 // ─── Helper: Generate JWT ─────────────────────────────────────────────────────
-const generateToken = (userId, role) => {
-  return jwt.sign({ id: userId, role }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRES_IN || "7d",
+// Admin tokens expire in 8h; voter tokens expire in 1d for tighter security
+const generateToken = (userId, role, tokenVersion = 0) => {
+  const expiry = role === "admin" ? "8h" : "1d";
+  return jwt.sign({ id: userId, role, tokenVersion }, process.env.JWT_SECRET, {
+    expiresIn: expiry,
   });
 };
 
-const cookieOptions = {
+const cookieOptions = (role) => ({
   httpOnly: true,
   secure: process.env.NODE_ENV === "production",
   sameSite: "strict",
-  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-};
+  maxAge: role === "admin" ? 8 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000,
+});
 
 // ─────────────────────────────────────────────
 // @route   POST /api/auth/register
@@ -62,8 +64,8 @@ exports.register = async (req, res) => {
       photo: photoFile.filename,
     });
 
-    const token = generateToken(user._id, user.role);
-    res.cookie("token", token, cookieOptions);
+    const token = generateToken(user._id, user.role, user.tokenVersion);
+    res.cookie("token", token, cookieOptions(user.role));
 
     res.status(201).json({
       success: true,
@@ -122,8 +124,8 @@ exports.login = async (req, res) => {
     user.lastLogin = new Date();
     await user.save({ validateBeforeSave: false });
 
-    const token = generateToken(user._id, user.role);
-    res.cookie("token", token, cookieOptions);
+    const token = generateToken(user._id, user.role, user.tokenVersion);
+    res.cookie("token", token, cookieOptions(user.role));
 
     res.status(200).json({
       success: true,
@@ -186,8 +188,8 @@ exports.adminWalletLogin = async (req, res) => {
       return res.status(404).json({ success: false, message: "Admin account not found. Run seed script." });
     }
 
-    const token = generateToken(admin._id, "admin");
-    res.cookie("token", token, cookieOptions);
+    const token = generateToken(admin._id, "admin", admin.tokenVersion);
+    res.cookie("token", token, cookieOptions("admin"));
 
     res.status(200).json({
       success: true,
@@ -212,7 +214,13 @@ exports.adminWalletLogin = async (req, res) => {
 // @desc    Logout user
 // @access  Private
 // ─────────────────────────────────────────────
-exports.logout = (req, res) => {
+exports.logout = async (req, res) => {
+  try {
+    // Increment tokenVersion → instantly invalidates ALL active tokens for this user
+    await User.findByIdAndUpdate(req.user.id, { $inc: { tokenVersion: 1 } });
+  } catch (_) {
+    // Non-critical — still proceed with logout
+  }
   res.cookie("token", "loggedout", {
     httpOnly: true,
     expires: new Date(Date.now() + 10 * 1000),

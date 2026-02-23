@@ -28,6 +28,13 @@ exports.protect = async (req, res, next) => {
       return res.status(403).json({ success: false, message: "Your account has been deactivated" });
     }
 
+    // ── Token version check ──────────────────────────────────────────────
+    // Tokens without tokenVersion (issued before this security update) are
+    // immediately rejected. Tokens with wrong version (post-logout) are rejected.
+    if (decoded.tokenVersion === undefined || decoded.tokenVersion !== user.tokenVersion) {
+      return res.status(401).json({ success: false, message: "Session expired. Please log in again." });
+    }
+
     req.user = user;
     next();
   } catch (error) {
