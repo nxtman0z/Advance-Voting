@@ -23,7 +23,8 @@ API.interceptors.response.use(
     if (error.response?.status === 401) {
       localStorage.removeItem("token");
       // Reload to reset all React state and redirect to home
-      if (window.location.pathname !== "/login" && window.location.pathname !== "/") {
+      const publicPaths = ["/", "/login", "/results", "/register"];
+      if (!publicPaths.includes(window.location.pathname)) {
         window.location.href = "/";
       }
     }

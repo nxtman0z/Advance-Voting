@@ -12,7 +12,10 @@ const castLimiter = rateLimit({
   message: { success: false, message: "Too many vote attempts. Please try again later." },
 });
 
-// All vote routes require authentication
+// ─── Public routes (no auth needed) ───────────────────────────────────────────
+router.get("/results", voteController.getResults);
+
+// All other vote routes require authentication
 router.use(protect);
 
 // ─── Elections with parties ────────────────────────────────────────────────────
@@ -36,7 +39,5 @@ router.get("/my-votes", voteController.getMyVotes);
 // ─── Voter blockchain status for an election ───────────────────────────────────
 router.get("/status/:electionMongoId", voteController.getVoterStatus);
 
-// ─── Results (all elections with parties + vote counts) ──────────────────────
-router.get("/results", voteController.getResults);
 
 module.exports = router;
