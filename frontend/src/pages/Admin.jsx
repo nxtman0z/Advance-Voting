@@ -39,15 +39,15 @@ export default function Admin() {
         <div className="absolute top-0 right-0 w-72 h-72 bg-purple-600/10 rounded-full -translate-y-1/2 translate-x-1/4 blur-3xl pointer-events-none" />
         <div className="relative flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-purple-600/20 border border-purple-500/30 flex items-center justify-center text-2xl font-black text-purple-300 flex-shrink-0">
-              {user?.fullName?.charAt(0)?.toUpperCase() || "A"}
+            <div className="w-14 h-14 rounded-2xl bg-purple-600/20 border border-purple-500/30 flex items-center justify-center flex-shrink-0 overflow-hidden">
+              <img src="/logo.png" alt="Pollaris" className="w-10 h-10 object-contain" />
             </div>
             <div>
               <div className="flex items-center gap-2.5 mb-1">
                 <h1 className="text-2xl font-black text-white">Admin Panel</h1>
                 <span className="text-xs bg-purple-600/30 border border-purple-500/40 text-purple-300 px-2.5 py-0.5 rounded-full font-bold tracking-wide">ADMIN</span>
               </div>
-              <p className="text-slate-400 text-sm">{user?.email} &mdash; Full system access</p>
+              <p className="text-slate-400 text-sm italic">Transparent Voting, Trusted Results</p>
             </div>
           </div>
           <div className="text-sm text-slate-400 text-right">
