@@ -806,11 +806,15 @@ function TabVoters({ API }) {
 
 // --- Voter Detail Modal -------------------------------------------------------
 function VoterDetailModal({ voter: u, onClose, UPLOADS_PHOTOS }) {
+  const [photoOpen, setPhotoOpen] = useState(false);
   const joinDate = new Date(u.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' });
   const gender   = u.gender ? u.gender.charAt(0).toUpperCase() + u.gender.slice(1) : '—';
   const role     = u.role   ? u.role.charAt(0).toUpperCase()   + u.role.slice(1)   : 'Voter';
 
+  const photoUrl = u.photo ? `${UPLOADS_PHOTOS}/${u.photo}` : null;
+
   return (
+    <>
     <div
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-sm"
       onClick={onClose}
@@ -837,11 +841,15 @@ function VoterDetailModal({ voter: u, onClose, UPLOADS_PHOTOS }) {
             className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-slate-400 hover:text-white flex items-center justify-center transition-all text-sm z-10"
           >✕</button>
 
-          {/* Avatar with gradient ring — no dark gap */}
-          <div className={`relative p-[3px] rounded-full ${u.isActive ? 'bg-gradient-to-br from-cyan-400 via-blue-500 to-purple-600' : 'bg-slate-600'} mb-3 shadow-2xl`}>
-            {u.photo ? (
+          {/* Avatar with gradient ring — clickable to open full photo */}
+          <div
+            className={`relative p-[3px] rounded-full ${u.isActive ? 'bg-gradient-to-br from-cyan-400 via-blue-500 to-purple-600' : 'bg-slate-600'} mb-3 shadow-2xl ${photoUrl ? 'cursor-zoom-in' : ''}`}
+            onClick={photoUrl ? (e) => { e.stopPropagation(); setPhotoOpen(true); } : undefined}
+            title={photoUrl ? 'Click to view full photo' : ''}
+          >
+            {photoUrl ? (
               <img
-                src={`${UPLOADS_PHOTOS}/${u.photo}`}
+                src={photoUrl}
                 alt={u.fullName}
                 className="w-24 h-24 rounded-full object-cover object-top block"
                 onError={(e) => { e.target.style.display = 'none'; }}
@@ -898,6 +906,27 @@ function VoterDetailModal({ voter: u, onClose, UPLOADS_PHOTOS }) {
         @keyframes slideUp { from { opacity:0; transform:translateY(16px) } to { opacity:1; transform:translateY(0) } }
       `}</style>
     </div>
+
+    {/* ── Full Photo Lightbox ── */}
+    {photoOpen && photoUrl && (
+      <div
+        className="fixed inset-0 z-[60] flex items-center justify-center bg-black/95 backdrop-blur-md"
+        onClick={() => setPhotoOpen(false)}
+      >
+        <button
+          onClick={() => setPhotoOpen(false)}
+          className="absolute top-5 right-5 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center text-lg transition-all"
+        >✕</button>
+        <img
+          src={photoUrl}
+          alt={u.fullName}
+          className="max-w-[85vw] max-h-[85vh] rounded-2xl shadow-2xl object-contain"
+          onClick={(e) => e.stopPropagation()}
+        />
+        <p className="absolute bottom-6 text-slate-400 text-sm">{u.fullName}</p>
+      </div>
+    )}
+    </>
   );
 }
 
