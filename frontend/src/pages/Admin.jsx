@@ -807,55 +807,92 @@ function TabVoters({ API }) {
 // --- Voter Detail Modal -------------------------------------------------------
 function VoterDetailModal({ voter: u, onClose, UPLOADS_PHOTOS }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onClick={onClose}>
-      <div className="relative w-full max-w-md bg-slate-900 border border-slate-700/60 rounded-2xl shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
-        {/* Top gradient strip */}
-        <div className="h-1 w-full bg-gradient-to-r from-blue-600 via-purple-600 to-cyan-600" />
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md" onClick={onClose}>
+      <div
+        className="relative w-full max-w-sm bg-gradient-to-b from-slate-800 to-slate-900 border border-slate-700/50 rounded-3xl shadow-2xl overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Gradient header background */}
+        <div className="relative bg-gradient-to-br from-blue-900/60 via-purple-900/40 to-slate-900 px-6 pt-6 pb-10">
+          {/* Glow blob */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-40 bg-blue-600/20 rounded-full blur-3xl pointer-events-none" />
 
-        {/* Close */}
-        <button onClick={onClose} className="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center text-sm transition-colors">✕</button>
+          {/* Close button */}
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-700/70 hover:bg-slate-600 text-slate-300 hover:text-white flex items-center justify-center text-xs font-bold transition-all border border-slate-600/40"
+          >✕</button>
 
-        {/* Header */}
-        <div className="flex items-center gap-4 p-5 pb-4">
-          {u.photo ? (
-            <img src={`${UPLOADS_PHOTOS}/${u.photo}`} alt={u.fullName} className="w-20 h-20 rounded-2xl object-cover ring-2 ring-blue-500/30 flex-shrink-0" onError={(e) => { e.target.style.display='none'; }} />
-          ) : (
-            <div className="w-20 h-20 rounded-2xl bg-blue-600/20 border border-blue-500/30 flex items-center justify-center flex-shrink-0">
-              <span className="text-3xl text-blue-400 font-bold">{u.fullName?.charAt(0)?.toUpperCase() || '?'}</span>
+          {/* Avatar */}
+          <div className="flex flex-col items-center gap-3 relative">
+            {u.photo ? (
+              <img
+                src={`${UPLOADS_PHOTOS}/${u.photo}`}
+                alt={u.fullName}
+                className="w-24 h-24 rounded-2xl object-cover ring-4 ring-blue-500/30 shadow-xl"
+                onError={(e) => { e.target.style.display = 'none'; }}
+              />
+            ) : (
+              <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-blue-600/40 to-purple-600/30 border border-blue-500/30 flex items-center justify-center shadow-xl">
+                <span className="text-4xl text-blue-300 font-black">{u.fullName?.charAt(0)?.toUpperCase() || '?'}</span>
+              </div>
+            )}
+            <div className="text-center">
+              <h3 className="text-xl font-black text-white">{u.fullName}</h3>
+              <p className="text-slate-400 text-sm mt-0.5">{u.email}</p>
             </div>
-          )}
-          <div className="min-w-0">
-            <h3 className="text-lg font-bold text-white truncate">{u.fullName}</h3>
-            <p className="text-slate-400 text-sm truncate">{u.email}</p>
-            <div className="flex gap-1.5 mt-2 flex-wrap">
-              <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${u.isVerified ? 'bg-green-600/20 border-green-500/30 text-green-300' : 'bg-yellow-600/20 border-yellow-500/30 text-yellow-300'}`}>{u.isVerified ? '✓ Verified' : 'Unverified'}</span>
-              <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${u.isActive ? 'bg-blue-600/20 border-blue-500/30 text-blue-300' : 'bg-red-600/20 border-red-500/30 text-red-300'}`}>{u.isActive ? 'Active' : 'Inactive'}</span>
-              {u.isBlockedFromVoting && <span className="text-xs px-2 py-0.5 rounded-full border bg-red-600/20 border-red-500/30 text-red-300 font-medium">Blocked</span>}
+            {/* Status badges */}
+            <div className="flex gap-2 flex-wrap justify-center">
+              <span className={`text-xs px-3 py-1 rounded-full border font-semibold ${u.isVerified ? 'bg-green-500/15 border-green-500/40 text-green-300' : 'bg-yellow-500/15 border-yellow-500/40 text-yellow-300'}`}>
+                {u.isVerified ? '✓ Verified' : '⚠ Unverified'}
+              </span>
+              <span className={`text-xs px-3 py-1 rounded-full border font-semibold ${u.isActive ? 'bg-blue-500/15 border-blue-500/40 text-blue-300' : 'bg-red-500/15 border-red-500/40 text-red-300'}`}>
+                {u.isActive ? '● Active' : '○ Inactive'}
+              </span>
+              {u.isBlockedFromVoting && (
+                <span className="text-xs px-3 py-1 rounded-full border bg-red-500/15 border-red-500/40 text-red-300 font-semibold">🚫 Blocked</span>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Details grid */}
-        <div className="px-5 pb-5 grid grid-cols-2 gap-3">
-          <DetailCard label="Phone" value={u.phone || '—'} />
-          <DetailCard label="Gender" value={u.gender ? u.gender.charAt(0).toUpperCase() + u.gender.slice(1) : '—'} />
-          <DetailCard label="Voter ID" value={u.voterId || '—'} mono />
-          <DetailCard label="Registered" value={new Date(u.createdAt).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' })} />
-          <DetailCard label="Face Data" value={u.isFaceRegistered ? '✓ Registered' : '✗ Not registered'} accent={u.isFaceRegistered ? 'green' : 'red'} />
-          <DetailCard label="Role" value={u.role ? u.role.charAt(0).toUpperCase() + u.role.slice(1) : 'Voter'} />
-          {u.walletAddress && <div className="col-span-2"><DetailCard label="Wallet" value={u.walletAddress} mono small /></div>}
+        {/* Cards grid — overlap header slightly */}
+        <div className="px-5 -mt-4 pb-5 grid grid-cols-2 gap-2.5">
+          <MCard icon="📞" label="Phone" value={u.phone || '—'} />
+          <MCard icon="👤" label="Gender" value={u.gender ? u.gender.charAt(0).toUpperCase() + u.gender.slice(1) : '—'} />
+          <MCard icon="🪪" label="Voter ID" value={u.voterId || '—'} mono />
+          <MCard icon="📅" label="Registered" value={new Date(u.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })} />
+          <MCard
+            icon={u.isFaceRegistered ? '🟢' : '🔴'}
+            label="Vote Biometric"
+            sublabel="Face scan for voting"
+            value={u.isFaceRegistered ? 'Enrolled' : 'Not enrolled'}
+            accent={u.isFaceRegistered ? 'green' : 'red'}
+          />
+          <MCard icon="🛡️" label="Role" value={u.role ? u.role.charAt(0).toUpperCase() + u.role.slice(1) : 'Voter'} />
+          {u.walletAddress && (
+            <div className="col-span-2">
+              <MCard icon="🔗" label="Wallet Address" value={u.walletAddress} mono small />
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
 }
 
-function DetailCard({ label, value, mono = false, accent, small = false }) {
+function MCard({ icon, label, sublabel, value, mono = false, accent, small = false }) {
   const accentMap = { green: 'text-green-400', red: 'text-red-400' };
   return (
-    <div className="bg-slate-800/60 border border-slate-700/40 rounded-xl px-3 py-2.5">
-      <p className="text-slate-500 text-xs mb-0.5">{label}</p>
-      <p className={`font-medium truncate ${small ? 'text-xs' : 'text-sm'} ${mono ? 'font-mono text-slate-300' : accentMap[accent] || 'text-white'}`}>{value}</p>
+    <div className="bg-slate-800/70 border border-slate-700/40 rounded-2xl px-3.5 py-3 flex flex-col gap-0.5">
+      <div className="flex items-center gap-1.5">
+        <span className="text-base leading-none">{icon}</span>
+        <span className="text-slate-500 text-xs font-medium">{label}</span>
+      </div>
+      {sublabel && <p className="text-slate-600 text-[10px] pl-0.5">{sublabel}</p>}
+      <p className={`font-semibold mt-0.5 leading-tight ${small ? 'text-xs' : 'text-sm'} ${mono ? 'font-mono text-slate-300 break-all' : accentMap[accent] || 'text-white'}`}>
+        {value}
+      </p>
     </div>
   );
 }
