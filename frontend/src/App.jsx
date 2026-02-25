@@ -6,6 +6,7 @@ import { Web3Provider } from "./context/Web3Context";
 
 import Navbar from "./components/Navbar";
 import SplashScreen from "./components/SplashScreen";
+import PolarisBot from "./components/PolarisBot";
 import Home from "./pages/Home";
 import Register from "./pages/Register";
 import Login from "./pages/Login";
@@ -113,6 +114,7 @@ function AppRoutes() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
+      <PolarisBot />
       <Toaster
         position="top-right"
         toastOptions={{
