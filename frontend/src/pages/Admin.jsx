@@ -910,20 +910,20 @@ function VoterDetailModal({ voter: u, onClose, UPLOADS_PHOTOS }) {
     {/* ── Full Photo Lightbox ── */}
     {photoOpen && photoUrl && (
       <div
-        className="fixed inset-0 z-[60] flex items-center justify-center bg-black/95 backdrop-blur-md"
+        className="fixed inset-0 z-[60] flex flex-col items-center justify-center gap-4 bg-black/95 backdrop-blur-md"
         onClick={() => setPhotoOpen(false)}
       >
-        <button
-          onClick={() => setPhotoOpen(false)}
-          className="absolute top-5 right-5 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center text-lg transition-all"
-        >✕</button>
+        <p className="text-slate-400 text-sm font-medium">{u.fullName}</p>
         <img
           src={photoUrl}
           alt={u.fullName}
           className="w-64 h-64 sm:w-80 sm:h-80 rounded-2xl shadow-2xl object-cover object-top"
           onClick={(e) => e.stopPropagation()}
         />
-        <p className="absolute bottom-6 text-slate-400 text-sm">{u.fullName}</p>
+        <button
+          onClick={(e) => { e.stopPropagation(); setPhotoOpen(false); }}
+          className="mt-2 w-10 h-10 rounded-full bg-white/15 hover:bg-white/30 text-white flex items-center justify-center text-lg transition-all border border-white/20 z-10"
+        >✕</button>
       </div>
     )}
     </>
