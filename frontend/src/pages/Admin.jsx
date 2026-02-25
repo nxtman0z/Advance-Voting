@@ -622,6 +622,7 @@ function TabVoters({ API }) {
   const [toggling,  setToggling]  = useState({});
   const [deleting,   setDeleting]  = useState({});
   const [confirmDel, setConfirmDel] = useState(null); // userId to confirm
+  const [selectedVoter, setSelectedVoter] = useState(null);
   const searchTimer = useRef(null);
   const LIMIT = 12;
 
@@ -734,7 +735,7 @@ function TabVoters({ API }) {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {users.map((u) => (
-            <div key={u._id} className={`bg-slate-800/60 border rounded-xl p-4 flex flex-col gap-3 transition-all ${u.isActive ? "border-slate-700/50" : "border-red-500/20 opacity-70"}`}>
+            <div key={u._id} onClick={() => setSelectedVoter(u)} className={`bg-slate-800/60 border rounded-xl p-4 flex flex-col gap-3 transition-all cursor-pointer hover:border-blue-500/40 hover:bg-slate-800/80 hover:shadow-lg hover:shadow-blue-500/5 ${u.isActive ? "border-slate-700/50" : "border-red-500/20 opacity-70"}`}>
               <div className="flex items-center gap-3">
                 {u.photo ? (
                   <img src={`${UPLOADS_PHOTOS}/${u.photo}`} alt={u.fullName} className="w-14 h-14 rounded-full object-cover ring-2 ring-slate-600 flex-shrink-0" onError={(e) => { e.target.style.display = "none"; }} />
@@ -760,7 +761,7 @@ function TabVoters({ API }) {
                 <span className={`px-2 py-0.5 rounded-full border font-medium ${u.isActive ? "bg-blue-600/20 border-blue-500/30 text-blue-300" : "bg-red-600/20 border-red-500/30 text-red-300"}`}>{u.isActive ? "Active" : "Inactive"}</span>
                 {u.isBlockedFromVoting && <span className="px-2 py-0.5 rounded-full border bg-red-600/20 border-red-500/30 text-red-300 font-medium">Blocked</span>}
               </div>
-              <div className="flex gap-2 pt-1 border-t border-slate-700/50">
+              <div className="flex gap-2 pt-1 border-t border-slate-700/50" onClick={(e) => e.stopPropagation()}>
                 <button onClick={() => handleToggle(u._id, u.isActive)} disabled={toggling[u._id]}
                   className={`flex-1 text-xs py-1.5 rounded-lg border transition-colors font-medium ${u.isActive ? "bg-red-600/10 border-red-500/30 text-red-400 hover:bg-red-600/20" : "bg-green-600/10 border-green-500/30 text-green-400 hover:bg-green-600/20"} disabled:opacity-50`}>
                   {toggling[u._id] ? "..." : u.isActive ? "Deactivate" : "Activate"}
@@ -788,6 +789,9 @@ function TabVoters({ API }) {
         </div>
       )}
 
+      {/* Voter Detail Modal */}
+      {selectedVoter && <VoterDetailModal voter={selectedVoter} onClose={() => setSelectedVoter(null)} UPLOADS_PHOTOS={UPLOADS_PHOTOS} />}
+
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-2 pt-4">
@@ -796,6 +800,62 @@ function TabVoters({ API }) {
           <button onClick={() => { const p = Math.min(totalPages, page+1); setPage(p); load(search, gender, status, p); }} disabled={page===totalPages} className="px-3 py-1.5 text-sm bg-slate-800 border border-slate-700/50 text-slate-300 rounded-lg hover:bg-slate-700 disabled:opacity-40">Next</button>
         </div>
       )}
+    </div>
+  );
+}
+
+// --- Voter Detail Modal -------------------------------------------------------
+function VoterDetailModal({ voter: u, onClose, UPLOADS_PHOTOS }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onClick={onClose}>
+      <div className="relative w-full max-w-md bg-slate-900 border border-slate-700/60 rounded-2xl shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+        {/* Top gradient strip */}
+        <div className="h-1 w-full bg-gradient-to-r from-blue-600 via-purple-600 to-cyan-600" />
+
+        {/* Close */}
+        <button onClick={onClose} className="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center text-sm transition-colors">✕</button>
+
+        {/* Header */}
+        <div className="flex items-center gap-4 p-5 pb-4">
+          {u.photo ? (
+            <img src={`${UPLOADS_PHOTOS}/${u.photo}`} alt={u.fullName} className="w-20 h-20 rounded-2xl object-cover ring-2 ring-blue-500/30 flex-shrink-0" onError={(e) => { e.target.style.display='none'; }} />
+          ) : (
+            <div className="w-20 h-20 rounded-2xl bg-blue-600/20 border border-blue-500/30 flex items-center justify-center flex-shrink-0">
+              <span className="text-3xl text-blue-400 font-bold">{u.fullName?.charAt(0)?.toUpperCase() || '?'}</span>
+            </div>
+          )}
+          <div className="min-w-0">
+            <h3 className="text-lg font-bold text-white truncate">{u.fullName}</h3>
+            <p className="text-slate-400 text-sm truncate">{u.email}</p>
+            <div className="flex gap-1.5 mt-2 flex-wrap">
+              <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${u.isVerified ? 'bg-green-600/20 border-green-500/30 text-green-300' : 'bg-yellow-600/20 border-yellow-500/30 text-yellow-300'}`}>{u.isVerified ? '✓ Verified' : 'Unverified'}</span>
+              <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${u.isActive ? 'bg-blue-600/20 border-blue-500/30 text-blue-300' : 'bg-red-600/20 border-red-500/30 text-red-300'}`}>{u.isActive ? 'Active' : 'Inactive'}</span>
+              {u.isBlockedFromVoting && <span className="text-xs px-2 py-0.5 rounded-full border bg-red-600/20 border-red-500/30 text-red-300 font-medium">Blocked</span>}
+            </div>
+          </div>
+        </div>
+
+        {/* Details grid */}
+        <div className="px-5 pb-5 grid grid-cols-2 gap-3">
+          <DetailCard label="Phone" value={u.phone || '—'} />
+          <DetailCard label="Gender" value={u.gender ? u.gender.charAt(0).toUpperCase() + u.gender.slice(1) : '—'} />
+          <DetailCard label="Voter ID" value={u.voterId || '—'} mono />
+          <DetailCard label="Registered" value={new Date(u.createdAt).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' })} />
+          <DetailCard label="Face Data" value={u.isFaceRegistered ? '✓ Registered' : '✗ Not registered'} accent={u.isFaceRegistered ? 'green' : 'red'} />
+          <DetailCard label="Role" value={u.role ? u.role.charAt(0).toUpperCase() + u.role.slice(1) : 'Voter'} />
+          {u.walletAddress && <div className="col-span-2"><DetailCard label="Wallet" value={u.walletAddress} mono small /></div>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DetailCard({ label, value, mono = false, accent, small = false }) {
+  const accentMap = { green: 'text-green-400', red: 'text-red-400' };
+  return (
+    <div className="bg-slate-800/60 border border-slate-700/40 rounded-xl px-3 py-2.5">
+      <p className="text-slate-500 text-xs mb-0.5">{label}</p>
+      <p className={`font-medium truncate ${small ? 'text-xs' : 'text-sm'} ${mono ? 'font-mono text-slate-300' : accentMap[accent] || 'text-white'}`}>{value}</p>
     </div>
   );
 }
