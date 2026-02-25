@@ -120,6 +120,15 @@ export function AuthProvider({ children }) {
     return data;
   };
 
+  // ─── Update Profile (photo, address, dob, bio, socials) ──────────────
+  const updateProfile = async (formData) => {
+    const { data } = await API.patch("/auth/update-profile", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    setUser(data.data);
+    return data;
+  };
+
   // ─── Verify Account ───────────────────────────────────────────────────
   const verifyAccount = async (otp) => {
     const { data } = await API.post("/auth/verify-account", { otp });
@@ -135,7 +144,7 @@ export function AuthProvider({ children }) {
         setFaceVerified, setOtpVerified,
         register, login, adminWalletLogin, logout,
         verifyOTP, sendOTP, registerFace,
-        updateWallet, verifyAccount,
+        updateWallet, updateProfile, verifyAccount,
         API,
       }}
     >

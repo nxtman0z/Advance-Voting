@@ -53,6 +53,15 @@ const userSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    bio: {
+      type: String,
+      trim: true,
+      maxlength: 300,
+    },
+    socialLinks: {
+      twitter: { type: String, trim: true },
+      linkedin: { type: String, trim: true },
+    },
 
     // ─── Authentication ─────────────────────────────────────────────────
     password: {

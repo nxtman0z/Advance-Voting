@@ -3,6 +3,8 @@ import { useAuth } from "../context/AuthContext";
 import { useState } from "react";
 import { FiMenu, FiX, FiUser, FiLogOut } from "react-icons/fi";
 
+const API_ORIGIN = (import.meta.env.VITE_API_URL || "http://localhost:5000/api").replace("/api", "");
+
 export default function Navbar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -68,9 +70,18 @@ export default function Navbar() {
                   onClick={() => setDropdownOpen(!dropdownOpen)}
                   className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-700/50 hover:bg-slate-700 transition-colors"
                 >
-                  <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${user?.role === "admin" ? "bg-purple-600" : "bg-blue-600"}`}>
-                    {user.fullName?.charAt(0).toUpperCase()}
-                  </div>
+                  {user.photo && user.role !== "admin" ? (
+                    <img
+                      src={`${API_ORIGIN}/uploads/photos/${user.photo}`}
+                      alt={user.fullName}
+                      className="w-7 h-7 rounded-full object-cover object-top ring-1 ring-blue-500/50"
+                      onError={(e) => { e.target.style.display = "none"; }}
+                    />
+                  ) : (
+                    <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${user?.role === "admin" ? "bg-purple-600" : "bg-blue-600"}`}>
+                      {user.fullName?.charAt(0).toUpperCase()}
+                    </div>
+                  )}
                   <div className="flex flex-col items-start leading-tight">
                     <span className="text-sm text-slate-200">{user.fullName?.split(" ")[0]}</span>
                     {user?.role === "admin" && (
@@ -89,12 +100,14 @@ export default function Navbar() {
                         {user.isVerified ? "Verified" : "Unverified"}
                       </span>
                     </div>
-                    <button
-                      className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 rounded-lg transition-colors"
-                      onClick={() => { setDropdownOpen(false); navigate(user?.role === "admin" ? "/admin" : "/dashboard"); }}
-                    >
-                      <FiUser /> {user?.role === "admin" ? "Admin Panel" : "Dashboard"}
-                    </button>
+                    {user?.role === "admin" && (
+                      <button
+                        className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 rounded-lg transition-colors"
+                        onClick={() => { setDropdownOpen(false); navigate("/admin"); }}
+                      >
+                        <FiUser /> Admin Panel
+                      </button>
+                    )}
                     <button
                       className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
                       onClick={handleLogout}

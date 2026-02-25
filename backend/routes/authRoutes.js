@@ -33,6 +33,7 @@ router.use(protect); // All routes below require authentication
 
 router.get("/me", authController.getMe);
 router.post("/logout", authController.logout);
+router.patch("/update-profile", upload.upload.single("photo"), authController.updateProfile);
 router.post("/verify-account", authController.verifyAccount);
 router.post("/verify-face", authController.verifyFace);
 router.patch("/update-wallet", authController.updateWallet);

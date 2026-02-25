@@ -348,3 +348,36 @@ exports.updateWallet = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// ─────────────────────────────────────────────
+// @route   PATCH /api/auth/update-profile
+// @desc    Update optional profile fields (photo, address, dob, bio, social)
+// @access  Private
+// ─────────────────────────────────────────────
+exports.updateProfile = async (req, res) => {
+  try {
+    const { address, dateOfBirth, bio, twitterHandle, linkedinUrl } = req.body;
+
+    const updates = {};
+    if (address     !== undefined) updates.address               = address;
+    if (dateOfBirth !== undefined && dateOfBirth !== "") updates.dateOfBirth = new Date(dateOfBirth);
+    if (bio         !== undefined) updates.bio                   = bio;
+    if (twitterHandle !== undefined) updates["socialLinks.twitter"] = twitterHandle;
+    if (linkedinUrl   !== undefined) updates["socialLinks.linkedin"] = linkedinUrl;
+
+    if (req.file) updates.photo = req.file.filename;
+
+    if (Object.keys(updates).length === 0)
+      return res.status(400).json({ success: false, message: "Nothing to update" });
+
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      { $set: updates },
+      { new: true, runValidators: true }
+    );
+
+    res.status(200).json({ success: true, data: user });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
