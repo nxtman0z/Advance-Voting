@@ -806,91 +806,127 @@ function TabVoters({ API }) {
 
 // --- Voter Detail Modal -------------------------------------------------------
 function VoterDetailModal({ voter: u, onClose, UPLOADS_PHOTOS }) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md" onClick={onClose}>
-      <div
-        className="relative w-full max-w-sm bg-gradient-to-b from-slate-800 to-slate-900 border border-slate-700/50 rounded-3xl shadow-2xl overflow-hidden"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Gradient header background */}
-        <div className="relative bg-gradient-to-br from-blue-900/60 via-purple-900/40 to-slate-900 px-6 pt-6 pb-10">
-          {/* Glow blob */}
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-40 bg-blue-600/20 rounded-full blur-3xl pointer-events-none" />
+  const joinDate = new Date(u.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' });
+  const gender   = u.gender ? u.gender.charAt(0).toUpperCase() + u.gender.slice(1) : '—';
+  const role     = u.role   ? u.role.charAt(0).toUpperCase()   + u.role.slice(1)   : 'Voter';
 
-          {/* Close button */}
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="relative w-full sm:max-w-sm bg-[#0f1623] border border-white/8 rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden animate-slide-up"
+        onClick={(e) => e.stopPropagation()}
+        style={{ animation: 'slideUp .22s cubic-bezier(.4,0,.2,1)' }}
+      >
+        {/* ── Drag pill (mobile) ── */}
+        <div className="flex justify-center pt-3 sm:hidden">
+          <div className="w-10 h-1 rounded-full bg-white/20" />
+        </div>
+
+        {/* ── Hero Header ── */}
+        <div className="relative flex flex-col items-center pt-5 pb-6 px-6">
+          {/* radial glow */}
+          <div className="absolute inset-0 bg-gradient-radial from-blue-600/12 via-transparent to-transparent pointer-events-none" />
+
+          {/* Close */}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-700/70 hover:bg-slate-600 text-slate-300 hover:text-white flex items-center justify-center text-xs font-bold transition-all border border-slate-600/40"
+            className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/8 hover:bg-white/15 text-slate-400 hover:text-white flex items-center justify-center transition-all text-sm"
           >✕</button>
 
-          {/* Avatar */}
-          <div className="flex flex-col items-center gap-3 relative">
+          {/* Avatar with status ring */}
+          <div className={`p-1 rounded-full ${u.isActive ? 'bg-gradient-to-br from-blue-500 to-purple-600' : 'bg-slate-700'} mb-3`}>
             {u.photo ? (
               <img
                 src={`${UPLOADS_PHOTOS}/${u.photo}`}
                 alt={u.fullName}
-                className="w-24 h-24 rounded-2xl object-cover ring-4 ring-blue-500/30 shadow-xl"
+                className="w-20 h-20 rounded-full object-cover ring-2 ring-[#0f1623]"
                 onError={(e) => { e.target.style.display = 'none'; }}
               />
             ) : (
-              <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-blue-600/40 to-purple-600/30 border border-blue-500/30 flex items-center justify-center shadow-xl">
-                <span className="text-4xl text-blue-300 font-black">{u.fullName?.charAt(0)?.toUpperCase() || '?'}</span>
+              <div className="w-20 h-20 rounded-full bg-slate-800 ring-2 ring-[#0f1623] flex items-center justify-center">
+                <span className="text-3xl font-black text-white">{u.fullName?.charAt(0)?.toUpperCase() || '?'}</span>
               </div>
             )}
-            <div className="text-center">
-              <h3 className="text-xl font-black text-white">{u.fullName}</h3>
-              <p className="text-slate-400 text-sm mt-0.5">{u.email}</p>
-            </div>
-            {/* Status badges */}
-            <div className="flex gap-2 flex-wrap justify-center">
-              <span className={`text-xs px-3 py-1 rounded-full border font-semibold ${u.isVerified ? 'bg-green-500/15 border-green-500/40 text-green-300' : 'bg-yellow-500/15 border-yellow-500/40 text-yellow-300'}`}>
-                {u.isVerified ? '✓ Verified' : '⚠ Unverified'}
-              </span>
-              <span className={`text-xs px-3 py-1 rounded-full border font-semibold ${u.isActive ? 'bg-blue-500/15 border-blue-500/40 text-blue-300' : 'bg-red-500/15 border-red-500/40 text-red-300'}`}>
-                {u.isActive ? '● Active' : '○ Inactive'}
-              </span>
-              {u.isBlockedFromVoting && (
-                <span className="text-xs px-3 py-1 rounded-full border bg-red-500/15 border-red-500/40 text-red-300 font-semibold">🚫 Blocked</span>
-              )}
-            </div>
+          </div>
+
+          <h3 className="text-lg font-bold text-white tracking-tight">{u.fullName}</h3>
+          <p className="text-sm text-slate-500 mt-0.5 mb-3">{u.email}</p>
+
+          {/* Badges row */}
+          <div className="flex gap-2 flex-wrap justify-center">
+            <Badge color={u.isVerified ? 'green' : 'yellow'} dot>
+              {u.isVerified ? 'Verified' : 'Unverified'}
+            </Badge>
+            <Badge color={u.isActive ? 'blue' : 'red'} dot>
+              {u.isActive ? 'Active' : 'Inactive'}
+            </Badge>
+            {u.isBlockedFromVoting && <Badge color="red">Blocked</Badge>}
           </div>
         </div>
 
-        {/* Cards grid — overlap header slightly */}
-        <div className="px-5 -mt-4 pb-5 grid grid-cols-2 gap-2.5">
-          <MCard icon="📞" label="Phone" value={u.phone || '—'} />
-          <MCard icon="👤" label="Gender" value={u.gender ? u.gender.charAt(0).toUpperCase() + u.gender.slice(1) : '—'} />
-          <MCard icon="🪪" label="Voter ID" value={u.voterId || '—'} mono />
-          <MCard icon="📅" label="Registered" value={new Date(u.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })} />
-          <MCard
-            icon={u.isFaceRegistered ? '🟢' : '🔴'}
+        {/* ── Divider ── */}
+        <div className="h-px w-full bg-white/6" />
+
+        {/* ── Info Rows ── */}
+        <div className="px-5 py-3 space-y-0.5">
+          <InfoRow icon="📱" label="Phone"     value={u.phone || '—'} />
+          <InfoRow icon="⚧"  label="Gender"    value={gender} />
+          <InfoRow icon="🪪"  label="Voter ID"  value={u.voterId || '—'} mono />
+          <InfoRow icon="📅"  label="Joined"    value={joinDate} />
+          <InfoRow icon="🛡️" label="Role"      value={role} />
+          <InfoRow
+            icon={u.isFaceRegistered ? '✅' : '❌'}
             label="Vote Biometric"
-            sublabel="Face scan for voting"
             value={u.isFaceRegistered ? 'Enrolled' : 'Not enrolled'}
-            accent={u.isFaceRegistered ? 'green' : 'red'}
+            valueColor={u.isFaceRegistered ? 'text-green-400' : 'text-red-400'}
+            hint="Face scan for voting"
           />
-          <MCard icon="🛡️" label="Role" value={u.role ? u.role.charAt(0).toUpperCase() + u.role.slice(1) : 'Voter'} />
           {u.walletAddress && (
-            <div className="col-span-2">
-              <MCard icon="🔗" label="Wallet Address" value={u.walletAddress} mono small />
-            </div>
+            <InfoRow icon="🔗" label="Wallet" value={u.walletAddress} mono small />
           )}
         </div>
+
+        {/* ── Footer padding ── */}
+        <div className="h-5" />
       </div>
+
+      <style>{`
+        @keyframes slideUp { from { opacity:0; transform:translateY(16px) } to { opacity:1; transform:translateY(0) } }
+      `}</style>
     </div>
   );
 }
 
-function MCard({ icon, label, sublabel, value, mono = false, accent, small = false }) {
-  const accentMap = { green: 'text-green-400', red: 'text-red-400' };
+function Badge({ children, color = 'blue', dot = false }) {
+  const colors = {
+    green:  'bg-green-500/12 border-green-500/30 text-green-300',
+    blue:   'bg-blue-500/12  border-blue-500/30  text-blue-300',
+    yellow: 'bg-yellow-500/12 border-yellow-500/30 text-yellow-300',
+    red:    'bg-red-500/12   border-red-500/30   text-red-300',
+  };
+  const dotColors = { green:'bg-green-400', blue:'bg-blue-400', yellow:'bg-yellow-400', red:'bg-red-400' };
   return (
-    <div className="bg-slate-800/70 border border-slate-700/40 rounded-2xl px-3.5 py-3 flex flex-col gap-0.5">
-      <div className="flex items-center gap-1.5">
-        <span className="text-base leading-none">{icon}</span>
-        <span className="text-slate-500 text-xs font-medium">{label}</span>
+    <span className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full border font-medium ${colors[color]}`}>
+      {dot && <span className={`w-1.5 h-1.5 rounded-full ${dotColors[color]}`} />}
+      {children}
+    </span>
+  );
+}
+
+function InfoRow({ icon, label, value, mono = false, hint, valueColor, small = false }) {
+  return (
+    <div className="flex items-center justify-between py-2.5 border-b border-white/5 last:border-0 gap-4">
+      <div className="flex items-center gap-2.5 min-w-0 flex-1">
+        <span className="text-base w-5 text-center leading-none flex-shrink-0">{icon}</span>
+        <div className="min-w-0">
+          <p className="text-xs text-slate-500 leading-none mb-0.5">{label}</p>
+          {hint && <p className="text-[10px] text-slate-600 leading-none">{hint}</p>}
+        </div>
       </div>
-      {sublabel && <p className="text-slate-600 text-[10px] pl-0.5">{sublabel}</p>}
-      <p className={`font-semibold mt-0.5 leading-tight ${small ? 'text-xs' : 'text-sm'} ${mono ? 'font-mono text-slate-300 break-all' : accentMap[accent] || 'text-white'}`}>
+      <p className={`text-right flex-shrink-0 font-semibold leading-tight ${small ? 'text-xs' : 'text-sm'} ${mono ? 'font-mono text-slate-300 text-xs max-w-[140px] truncate' : valueColor || 'text-white'}`}>
         {value}
       </p>
     </div>
