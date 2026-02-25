@@ -920,7 +920,7 @@ function VoterDetailModal({ voter: u, onClose, UPLOADS_PHOTOS }) {
         <img
           src={photoUrl}
           alt={u.fullName}
-          className="max-w-[85vw] max-h-[85vh] rounded-2xl shadow-2xl object-contain"
+          className="w-64 h-64 sm:w-80 sm:h-80 rounded-2xl shadow-2xl object-cover object-top"
           onClick={(e) => e.stopPropagation()}
         />
         <p className="absolute bottom-6 text-slate-400 text-sm">{u.fullName}</p>
