@@ -826,32 +826,31 @@ function VoterDetailModal({ voter: u, onClose, UPLOADS_PHOTOS }) {
         </div>
 
         {/* ── Hero Header ── */}
-        <div className="relative flex flex-col items-center pt-5 pb-6 px-6">
-          {/* radial glow */}
-          <div className="absolute inset-0 bg-gradient-radial from-blue-600/12 via-transparent to-transparent pointer-events-none" />
+        <div className="relative flex flex-col items-center pt-6 pb-6 px-6 overflow-hidden">
+          {/* Header gradient background */}
+          <div className="absolute inset-0 bg-gradient-to-b from-blue-950/80 via-indigo-950/50 to-transparent pointer-events-none" />
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-52 h-32 bg-blue-600/20 rounded-full blur-3xl pointer-events-none" />
 
           {/* Close */}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/8 hover:bg-white/15 text-slate-400 hover:text-white flex items-center justify-center transition-all text-sm"
+            className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-slate-400 hover:text-white flex items-center justify-center transition-all text-sm z-10"
           >✕</button>
 
-          {/* Avatar with status ring */}
-          <div className={`p-[3px] rounded-full ${u.isActive ? 'bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600' : 'bg-slate-600'} mb-3 shadow-xl`}>
-            <div className="p-0.5 rounded-full bg-[#0f1623]">
-              {u.photo ? (
-                <img
-                  src={`${UPLOADS_PHOTOS}/${u.photo}`}
-                  alt={u.fullName}
-                  className="w-24 h-24 rounded-full object-cover object-top"
-                  onError={(e) => { e.target.style.display = 'none'; }}
-                />
-              ) : (
-                <div className="w-24 h-24 rounded-full bg-slate-800 flex items-center justify-center">
-                  <span className="text-4xl font-black text-white">{u.fullName?.charAt(0)?.toUpperCase() || '?'}</span>
-                </div>
-              )}
-            </div>
+          {/* Avatar with gradient ring — no dark gap */}
+          <div className={`relative p-[3px] rounded-full ${u.isActive ? 'bg-gradient-to-br from-cyan-400 via-blue-500 to-purple-600' : 'bg-slate-600'} mb-3 shadow-2xl`}>
+            {u.photo ? (
+              <img
+                src={`${UPLOADS_PHOTOS}/${u.photo}`}
+                alt={u.fullName}
+                className="w-24 h-24 rounded-full object-cover object-top block"
+                onError={(e) => { e.target.style.display = 'none'; }}
+              />
+            ) : (
+              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center">
+                <span className="text-4xl font-black text-white">{u.fullName?.charAt(0)?.toUpperCase() || '?'}</span>
+              </div>
+            )}
           </div>
 
           <h3 className="text-lg font-bold text-white tracking-tight">{u.fullName}</h3>
