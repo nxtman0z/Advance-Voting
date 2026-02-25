@@ -5,12 +5,14 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 const UPLOADS_BASE = API_BASE.replace("/api", "") + "/uploads";
 
 export default function Results() {
   const { API } = useAuth();
+  const { t } = useTranslation();
   const [elections, setElections] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -35,7 +37,7 @@ export default function Results() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] text-slate-400 gap-3">
         <div className="w-10 h-10 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-        Loading results…
+        {t("results.loading")}
       </div>
     );
   }
@@ -45,8 +47,8 @@ export default function Results() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-white">Election Results</h1>
-          <p className="text-slate-400 text-sm mt-1">Live results from all elections</p>
+          <h1 className="text-3xl font-bold text-white">{t("results.title")}</h1>
+          <p className="text-slate-400 text-sm mt-1">{t("results.subtitle")}</p>
         </div>
         <button
           onClick={() => fetchResults(true)}
@@ -54,13 +56,13 @@ export default function Results() {
           className="flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-700/50 border border-slate-600/50 text-slate-300 hover:bg-slate-700 transition-colors text-sm"
         >
           <span className={refreshing ? "animate-spin inline-block" : ""}>⟳</span>
-          {refreshing ? "Refreshing…" : "Refresh"}
+          {refreshing ? t("results.refreshing") : t("results.refresh")}
         </button>
       </div>
 
       {elections.length === 0 ? (
         <div className="text-center text-slate-400 py-20">
-          No election results available yet.
+          {t("results.noResults")}
         </div>
       ) : (
         <div className="space-y-8">
@@ -102,7 +104,7 @@ export default function Results() {
                   <div className="mb-5 p-4 bg-yellow-600/15 border border-yellow-500/30 rounded-xl flex items-center gap-4">
                     <span className="text-3xl">🏆</span>
                     <div>
-                      <p className="text-yellow-300 font-bold text-sm">Winner</p>
+                      <p className="text-yellow-300 font-bold text-sm">{t("results.winner")}</p>
                       <p className="text-white font-bold text-lg">{election.winner.partyName}</p>
                       <p className="text-slate-300 text-sm">{election.winner.candidateName} · {election.winner.voteCount} votes</p>
                     </div>

@@ -3,12 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import toast from "react-hot-toast";
 import { FiEdit2, FiX, FiCamera, FiMapPin, FiCalendar, FiTwitter, FiLinkedin, FiFileText } from "react-icons/fi";
+import { useTranslation } from "react-i18next";
 
 const API_BASE   = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 const API_ORIGIN = API_BASE.replace("/api", "");
 
 function EditProfileModal({ user, onClose, onSave }) {
   const fileRef = useRef(null);
+  const { t } = useTranslation();
   const [preview, setPreview] = useState(
     user.photo ? `${API_ORIGIN}/uploads/photos/${user.photo}` : null
   );
@@ -41,7 +43,7 @@ function EditProfileModal({ user, onClose, onSave }) {
       fd.append("linkedinUrl",   form.linkedinUrl);
       if (form.dateOfBirth) fd.append("dateOfBirth", form.dateOfBirth);
       await onSave(fd);
-      toast.success("Profile updated!");
+      toast.success(t("dashboard.editModal.save") + "!");
       onClose();
     } catch (err) {
       toast.error(err?.response?.data?.message || "Update failed");
@@ -59,7 +61,7 @@ function EditProfileModal({ user, onClose, onSave }) {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 flex-shrink-0">
-          <h2 className="text-white font-bold text-lg">Edit Profile</h2>
+          <h2 className="text-white font-bold text-lg">{t("dashboard.editModal.title")}</h2>
           <button onClick={onClose} className="w-8 h-8 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white flex items-center justify-center transition-all">
             <FiX size={16} />
           </button>
@@ -79,25 +81,25 @@ function EditProfileModal({ user, onClose, onSave }) {
                   <FiCamera size={13} className="text-white" />
                 </button>
               </div>
-              <p className="text-slate-500 text-xs">Click the camera icon to change your photo</p>
+              <p className="text-slate-500 text-xs">{t("dashboard.editModal.photoHint")}</p>
               <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handlePhoto} />
             </div>
             <div>
-              <label className="text-slate-400 text-xs font-medium flex items-center gap-1.5 mb-1.5"><FiFileText size={12} /> Bio <span className="text-slate-600 ml-1">(optional)</span></label>
-              <textarea rows={3} value={form.bio} onChange={(e) => setForm((p) => ({ ...p, bio: e.target.value }))} placeholder="Write something about yourself..." maxLength={300}
+              <label className="text-slate-400 text-xs font-medium flex items-center gap-1.5 mb-1.5"><FiFileText size={12} /> {t("dashboard.editModal.bio")} <span className="text-slate-600 ml-1">{t("dashboard.editModal.optional")}</span></label>
+              <textarea rows={3} value={form.bio} onChange={(e) => setForm((p) => ({ ...p, bio: e.target.value }))} placeholder={t("dashboard.editModal.bioPlaceholder")} maxLength={300}
                 className="w-full rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-600 resize-none focus:outline-none transition-all"
                 style={{ background: "rgba(15,23,42,.8)", border: "1px solid rgba(99,102,241,.2)" }}
                 onFocus={(e) => (e.target.style.borderColor = "rgba(99,102,241,.6)")} onBlur={(e) => (e.target.style.borderColor = "rgba(99,102,241,.2)")} />
             </div>
             <div>
-              <label className="text-slate-400 text-xs font-medium flex items-center gap-1.5 mb-1.5"><FiMapPin size={12} /> Address <span className="text-slate-600 ml-1">(optional)</span></label>
-              <input type="text" value={form.address} onChange={(e) => setForm((p) => ({ ...p, address: e.target.value }))} placeholder="Your city or state"
+              <label className="text-slate-400 text-xs font-medium flex items-center gap-1.5 mb-1.5"><FiMapPin size={12} /> {t("dashboard.editModal.address")} <span className="text-slate-600 ml-1">{t("dashboard.editModal.optional")}</span></label>
+              <input type="text" value={form.address} onChange={(e) => setForm((p) => ({ ...p, address: e.target.value }))} placeholder={t("dashboard.editModal.addressPlaceholder")}
                 className="w-full rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none transition-all"
                 style={{ background: "rgba(15,23,42,.8)", border: "1px solid rgba(99,102,241,.2)" }}
                 onFocus={(e) => (e.target.style.borderColor = "rgba(99,102,241,.6)")} onBlur={(e) => (e.target.style.borderColor = "rgba(99,102,241,.2)")} />
             </div>
             <div>
-              <label className="text-slate-400 text-xs font-medium flex items-center gap-1.5 mb-1.5"><FiCalendar size={12} /> Date of Birth <span className="text-slate-600 ml-1">(optional)</span></label>
+              <label className="text-slate-400 text-xs font-medium flex items-center gap-1.5 mb-1.5"><FiCalendar size={12} /> {t("dashboard.editModal.dateOfBirth")} <span className="text-slate-600 ml-1">{t("dashboard.editModal.optional")}</span></label>
               <input type="date" value={form.dateOfBirth} onChange={(e) => setForm((p) => ({ ...p, dateOfBirth: e.target.value }))}
                 className="w-full rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none transition-all"
                 style={{ background: "rgba(15,23,42,.8)", border: "1px solid rgba(99,102,241,.2)", colorScheme: "dark" }}
@@ -105,14 +107,14 @@ function EditProfileModal({ user, onClose, onSave }) {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-slate-400 text-xs font-medium flex items-center gap-1.5 mb-1.5"><FiTwitter size={12} /> Twitter</label>
+                <label className="text-slate-400 text-xs font-medium flex items-center gap-1.5 mb-1.5"><FiTwitter size={12} /> {t("dashboard.editModal.twitter")}</label>
                 <input type="text" value={form.twitterHandle} onChange={(e) => setForm((p) => ({ ...p, twitterHandle: e.target.value }))} placeholder="@username"
                   className="w-full rounded-xl px-3 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none transition-all"
                   style={{ background: "rgba(15,23,42,.8)", border: "1px solid rgba(99,102,241,.2)" }}
                   onFocus={(e) => (e.target.style.borderColor = "rgba(99,102,241,.6)")} onBlur={(e) => (e.target.style.borderColor = "rgba(99,102,241,.2)")} />
               </div>
               <div>
-                <label className="text-slate-400 text-xs font-medium flex items-center gap-1.5 mb-1.5"><FiLinkedin size={12} /> LinkedIn</label>
+                <label className="text-slate-400 text-xs font-medium flex items-center gap-1.5 mb-1.5"><FiLinkedin size={12} /> {t("dashboard.editModal.linkedin")}</label>
                 <input type="text" value={form.linkedinUrl} onChange={(e) => setForm((p) => ({ ...p, linkedinUrl: e.target.value }))} placeholder="linkedin.com/in/..."
                   className="w-full rounded-xl px-3 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none transition-all"
                   style={{ background: "rgba(15,23,42,.8)", border: "1px solid rgba(99,102,241,.2)" }}
@@ -121,9 +123,9 @@ function EditProfileModal({ user, onClose, onSave }) {
             </div>
           </div>
           <div className="px-6 pb-6 pt-4 flex gap-3 border-t border-white/5 flex-shrink-0">
-            <button type="button" onClick={onClose} className="flex-1 py-2.5 rounded-2xl text-sm text-slate-400 hover:text-white transition-colors" style={{ background: "rgba(255,255,255,.05)" }}>Cancel</button>
+            <button type="button" onClick={onClose} className="flex-1 py-2.5 rounded-2xl text-sm text-slate-400 hover:text-white transition-colors" style={{ background: "rgba(255,255,255,.05)" }}>{t("dashboard.editModal.cancel")}</button>
             <button type="submit" disabled={saving} className="flex-1 py-2.5 rounded-2xl text-sm text-white font-semibold transition-all hover:opacity-90 active:scale-95 disabled:opacity-40" style={{ background: "linear-gradient(135deg,#3b82f6,#8b5cf6)" }}>
-              {saving ? "Saving..." : "Save Changes"}
+              {saving ? t("dashboard.editModal.saving") : t("dashboard.editModal.save")}
             </button>
           </div>
         </form>
@@ -134,6 +136,7 @@ function EditProfileModal({ user, onClose, onSave }) {
 
 export default function Dashboard() {
   const { user, updateProfile, API } = useAuth();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [myVotes, setMyVotes]     = useState(null);
   const [elections, setElections] = useState([]);
@@ -196,10 +199,10 @@ export default function Dashboard() {
               {user.address && <span className="bg-slate-700/50 border border-slate-600/50 text-slate-300 px-3 py-1 rounded-lg">&#128205; {user.address}</span>}
               {user.dateOfBirth && <span className="bg-slate-700/50 border border-slate-600/50 text-slate-300 px-3 py-1 rounded-lg">&#127874; {new Date(user.dateOfBirth).toLocaleDateString()}</span>}
               <span className={`px-3 py-1 rounded-lg border ${user.role === "admin" ? "bg-purple-600/20 border-purple-500/40 text-purple-300" : "bg-blue-600/20 border-blue-500/40 text-blue-300"}`}>
-                {user.role === "admin" ? "\u2699 Admin" : "\u{1F5F3} Voter"}
+                {user.role === "admin" ? `⚙ ${t("dashboard.admin")}` : `🗳 ${t("dashboard.voter")}`}
               </span>
               <span className={`px-3 py-1 rounded-lg border ${user.isVerified ? "bg-green-600/20 border-green-500/40 text-green-300" : "bg-yellow-600/20 border-yellow-500/40 text-yellow-300"}`}>
-                {user.isVerified ? "\u2713 Verified" : "\u26A0 Unverified"}
+                {user.isVerified ? `✓ ${t("dashboard.verified")}` : `⚠ ${t("dashboard.unverified")}`}
               </span>
             </div>
 
@@ -221,22 +224,22 @@ export default function Dashboard() {
 
           <div className="shrink-0 text-center">
             <div className="text-3xl font-bold text-blue-400">{(myVotes?.votedElections || []).length}</div>
-            <div className="text-slate-400 text-sm">Elections Voted</div>
+            <div className="text-slate-400 text-sm">{t("dashboard.electionsVoted")}</div>
           </div>
         </div>
 
         <div className="mt-5 pt-4 border-t border-slate-700/40 flex justify-end">
           <button onClick={() => setEditOpen(true)} className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-slate-300 hover:text-white transition-all" style={{ background: "rgba(99,102,241,.12)", border: "1px solid rgba(99,102,241,.3)" }}>
-            <FiEdit2 size={13} /> Edit Profile
+            <FiEdit2 size={13} /> {t("dashboard.editProfile")}
           </button>
         </div>
       </div>
 
-      <h2 className="text-xl font-bold text-white mb-4">Elections</h2>
+      <h2 className="text-xl font-bold text-white mb-4">{t("dashboard.elections")}</h2>
       {loading ? (
-        <div className="text-center text-slate-400 py-10">Loading elections...</div>
+        <div className="text-center text-slate-400 py-10">{t("dashboard.loading")}</div>
       ) : elections.length === 0 ? (
-        <div className="bg-slate-800/40 border border-slate-700/40 rounded-xl p-8 text-center text-slate-400">No elections available at the moment. Check back later!</div>
+        <div className="bg-slate-800/40 border border-slate-700/40 rounded-xl p-8 text-center text-slate-400">{t("dashboard.noElections")}</div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
           {elections.map((election) => {
@@ -252,19 +255,19 @@ export default function Dashboard() {
                     <p className="text-slate-400 text-sm">{election.state}</p>
                   </div>
                   {voted ? (
-                    <span className="text-xs bg-green-600/20 border border-green-500/40 text-green-300 px-2 py-1 rounded-full whitespace-nowrap">\u2713 Voted</span>
+                    <span className="text-xs bg-green-600/20 border border-green-500/40 text-green-300 px-2 py-1 rounded-full whitespace-nowrap">\u2713 {t("dashboard.voted")}</span>
                   ) : isUpcoming ? (
-                    <span className="text-xs bg-blue-600/20 border border-blue-500/40 text-blue-300 px-2 py-1 rounded-full whitespace-nowrap">&#128336; Upcoming</span>
+                    <span className="text-xs bg-blue-600/20 border border-blue-500/40 text-blue-300 px-2 py-1 rounded-full whitespace-nowrap">&#128336; {t("dashboard.upcoming")}</span>
                   ) : (
-                    <span className="text-xs bg-yellow-600/20 border border-yellow-500/40 text-yellow-300 px-2 py-1 rounded-full whitespace-nowrap">&#9677; Pending</span>
+                    <span className="text-xs bg-yellow-600/20 border border-yellow-500/40 text-yellow-300 px-2 py-1 rounded-full whitespace-nowrap">&#9677; {t("dashboard.pending")}</span>
                   )}
                 </div>
                 <div className="text-xs text-slate-500 space-y-0.5">
-                  <div>{election.parties?.length || 0} parties &middot; Ends {new Date(election.endTime).toLocaleDateString()}</div>
-                  {isUpcoming && <div className="text-blue-400/70">Starts {new Date(election.startTime).toLocaleDateString()}</div>}
+                  <div>{election.parties?.length || 0} {t("dashboard.parties")} &middot; {t("dashboard.ends")} {new Date(election.endTime).toLocaleDateString()}</div>
+                  {isUpcoming && <div className="text-blue-400/70">{t("dashboard.starts")} {new Date(election.startTime).toLocaleDateString()}</div>}
                 </div>
-                {canVote && <button onClick={() => navigate("/vote")} className="mt-auto w-full py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition-colors">Vote Now &rarr;</button>}
-                {isUpcoming && <div className="mt-auto w-full py-2 rounded-lg bg-slate-700/50 border border-slate-600/50 text-slate-400 text-sm text-center">Voting opens soon</div>}
+                {canVote && <button onClick={() => navigate("/vote")} className="mt-auto w-full py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition-colors">{t("dashboard.voteNow")} &rarr;</button>}
+                {isUpcoming && <div className="mt-auto w-full py-2 rounded-lg bg-slate-700/50 border border-slate-600/50 text-slate-400 text-sm text-center">{t("dashboard.votingOpensSoon")}</div>}
               </div>
             );
           })}
@@ -273,7 +276,7 @@ export default function Dashboard() {
 
       {(myVotes?.votedElections || []).length > 0 && (
         <div className="mt-10">
-          <h2 className="text-xl font-bold text-white mb-4">Voting History</h2>
+          <h2 className="text-xl font-bold text-white mb-4">{t("dashboard.votingHistory")}</h2>
           <div className="bg-slate-800/60 border border-slate-700/50 rounded-xl divide-y divide-slate-700/50">
             {myVotes.votedElections.map((v, i) => (
               <div key={i} className="p-4 flex items-center justify-between gap-4">
@@ -281,7 +284,7 @@ export default function Dashboard() {
                   <p className="text-white text-sm">Election #{v.electionId}</p>
                   <p className="text-slate-500 text-xs">{new Date(v.votedAt).toLocaleString()}</p>
                 </div>
-                <a href={`https://sepolia.etherscan.io/tx/${v.txHash}`} target="_blank" rel="noreferrer" className="text-xs text-blue-400 hover:text-blue-300 underline">View TX</a>
+                <a href={`https://sepolia.etherscan.io/tx/${v.txHash}`} target="_blank" rel="noreferrer" className="text-xs text-blue-400 hover:text-blue-300 underline">{t("dashboard.viewTx")}</a>
               </div>
             ))}
           </div>

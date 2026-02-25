@@ -2,23 +2,60 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useState } from "react";
 import { FiMenu, FiX, FiUser, FiLogOut } from "react-icons/fi";
+import { useTranslation } from "react-i18next";
+import i18n from "../i18n/index.js";
 
 const API_ORIGIN = (import.meta.env.VITE_API_URL || "http://localhost:5000/api").replace("/api", "");
 
+const LANGS = [
+  { code: "en", label: "EN" },
+  { code: "hi", label: "हि" },
+  { code: "or", label: "ଓ" },
+];
+
+function LanguageSwitcher() {
+  const { i18n: i18nHook } = useTranslation();
+  const cur = i18nHook.language?.slice(0, 2) || "en";
+
+  function changeLang(code) {
+    i18n.changeLanguage(code);
+    localStorage.setItem("pollaris_lang", code);
+  }
+
+  return (
+    <div className="flex items-center gap-0.5 bg-slate-800 border border-slate-700 rounded-lg p-0.5">
+      {LANGS.map((l) => (
+        <button
+          key={l.code}
+          onClick={() => changeLang(l.code)}
+          className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-colors duration-150 ${
+            cur === l.code
+              ? "bg-blue-600 text-white"
+              : "text-slate-400 hover:text-white"
+          }`}
+        >
+          {l.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 export default function Navbar() {
   const { user, logout } = useAuth();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const navLinks = [
-    { label: "Home", path: "/" },
-    { label: "Vote", path: "/vote", protected: true, voterOnly: true },
-    { label: "Results", path: "/results" },
+    { label: t("nav.home"), path: "/" },
+    { label: t("nav.vote"), path: "/vote", protected: true, voterOnly: true },
+    { label: t("nav.results"), path: "/results" },
     ...(user?.role === "admin"
-      ? [{ label: "Admin Panel", path: "/admin", protected: true }]
-      : [{ label: "Dashboard", path: "/dashboard", protected: true }]
+      ? [{ label: t("nav.adminPanel"), path: "/admin", protected: true }]
+      : [{ label: t("nav.dashboard"), path: "/dashboard", protected: true }]
     ),
   ];
 
@@ -63,6 +100,7 @@ export default function Navbar() {
 
           {/* ─── Right Side ───────────────────────────────────────── */}
           <div className="hidden md:flex items-center gap-3">
+            <LanguageSwitcher />
             {/* User Menu */}
             {user ? (
               <div className="relative">
@@ -97,7 +135,7 @@ export default function Navbar() {
                       <span
                         className={user.isVerified ? "badge-success mt-1 inline-block" : "badge-warning mt-1 inline-block"}
                       >
-                        {user.isVerified ? "Verified" : "Unverified"}
+                        {user.isVerified ? t("dashboard.verified") : t("dashboard.unverified")}
                       </span>
                     </div>
                     {user?.role === "admin" && (
@@ -105,22 +143,22 @@ export default function Navbar() {
                         className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 rounded-lg transition-colors"
                         onClick={() => { setDropdownOpen(false); navigate("/admin"); }}
                       >
-                        <FiUser /> Admin Panel
+                        <FiUser /> {t("nav.adminPanel")}
                       </button>
                     )}
                     <button
                       className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
                       onClick={handleLogout}
                     >
-                      <FiLogOut /> Logout
+                      <FiLogOut /> {t("nav.logout")}
                     </button>
                   </div>
                 )}
               </div>
             ) : (
               <div className="flex gap-2">
-                <Link to="/login" className="btn-secondary text-sm py-1.5 px-4">Login</Link>
-                <Link to="/register" className="btn-primary text-sm py-1.5 px-4">Register</Link>
+                <Link to="/login" className="btn-secondary text-sm py-1.5 px-4">{t("nav.login")}</Link>
+                <Link to="/register" className="btn-primary text-sm py-1.5 px-4">{t("nav.register")}</Link>
               </div>
             )}
           </div>
@@ -138,6 +176,9 @@ export default function Navbar() {
       {/* ─── Mobile Menu ──────────────────────────────────────────── */}
       {menuOpen && (
         <div className="md:hidden bg-slate-900 border-t border-slate-700 px-4 py-4 space-y-2 animate-fadeInUp">
+          <div className="flex justify-end pb-2">
+            <LanguageSwitcher />
+          </div>
           {navLinks.map((link) => (
             (!link.protected || user) && (!link.voterOnly || user?.role !== "admin") && (
               <Link
@@ -154,12 +195,12 @@ export default function Navbar() {
           ))}
           {user ? (
             <button onClick={handleLogout} className="w-full text-left px-4 py-2 text-sm text-red-400">
-              Logout
+              {t("nav.logout")}
             </button>
           ) : (
             <div className="flex gap-2 pt-2">
-              <Link to="/login" onClick={() => setMenuOpen(false)} className="btn-secondary text-sm flex-1 text-center">Login</Link>
-              <Link to="/register" onClick={() => setMenuOpen(false)} className="btn-primary text-sm flex-1 text-center">Register</Link>
+              <Link to="/login" onClick={() => setMenuOpen(false)} className="btn-secondary text-sm flex-1 text-center">{t("nav.login")}</Link>
+              <Link to="/register" onClick={() => setMenuOpen(false)} className="btn-primary text-sm flex-1 text-center">{t("nav.register")}</Link>
             </div>
           )}
         </div>

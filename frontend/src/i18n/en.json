@@ -1,0 +1,128 @@
+{
+  "nav": {
+    "home": "Home",
+    "vote": "Vote",
+    "results": "Results",
+    "dashboard": "Dashboard",
+    "adminPanel": "Admin Panel",
+    "login": "Login",
+    "register": "Register",
+    "logout": "Logout",
+    "online": "Always online"
+  },
+  "home": {
+    "badge": "Powered by Ethereum Blockchain",
+    "subtitle": "Where Every Voice Finds Direction",
+    "description": "Decentralized, transparent, and tamper-proof elections with facial recognition, OTP 2FA, and MetaMask wallet integration.",
+    "getStarted": "Get Started",
+    "signIn": "Sign In",
+    "goToVote": "Go to Vote",
+    "adminLogin": "Admin Login",
+    "castVote": "Cast Your Vote",
+    "registerNow": "Register Now",
+    "stats": {
+      "transparent": "Transparent",
+      "fraudCases": "Fraud Cases",
+      "immutable": "Immutable Records"
+    },
+    "features": {
+      "title": "Why Pollaris?",
+      "blockchain": {
+        "title": "Blockchain Security",
+        "desc": "Every vote is recorded immutably on the Ethereum blockchain, making tampering impossible."
+      },
+      "face": {
+        "title": "Face Recognition",
+        "desc": "Advanced face-api.js biometric authentication ensures only you can cast your vote."
+      },
+      "otp": {
+        "title": "OTP Verification",
+        "desc": "Two-factor authentication via email and SMS adds an extra layer of security."
+      },
+      "metamask": {
+        "title": "MetaMask Wallet",
+        "desc": "Your unique Ethereum wallet identity ensures one vote per person, verified on-chain."
+      }
+    },
+    "howItWorks": {
+      "title": "How It Works",
+      "step1": { "title": "Register",  "desc": "Create an account with your national ID and personal details." },
+      "step2": { "title": "Verify",    "desc": "Register your face and verify your identity via OTP." },
+      "step3": { "title": "Connect",   "desc": "Link your MetaMask wallet to your voter profile." },
+      "step4": { "title": "Vote",      "desc": "Cast your vote securely — recorded forever on the blockchain." }
+    },
+    "cta": {
+      "title": "Ready to Vote?",
+      "desc": "Join thousands of voters in the most secure and transparent election system ever built."
+    }
+  },
+  "login": {
+    "title": "Welcome to Pollaris",
+    "subtitle": "Where Every Voice Finds Direction",
+    "email": "Email Address",
+    "password": "Password",
+    "emailPlaceholder": "you@example.com",
+    "passwordPlaceholder": "Your password",
+    "signIn": "Sign In",
+    "noAccount": "Don't have an account?",
+    "registerHere": "Register here"
+  },
+  "dashboard": {
+    "electionsVoted": "Elections Voted",
+    "editProfile": "Edit Profile",
+    "elections": "Elections",
+    "loading": "Loading elections...",
+    "noElections": "No elections available at the moment. Check back later!",
+    "votingHistory": "Voting History",
+    "voteNow": "Vote Now",
+    "votingOpensSoon": "Voting opens soon",
+    "voted": "Voted",
+    "upcoming": "Upcoming",
+    "pending": "Pending",
+    "viewTx": "View TX",
+    "verified": "Verified",
+    "unverified": "Unverified",
+    "voter": "Voter",
+    "admin": "Admin",
+    "parties": "parties",
+    "ends": "Ends",
+    "starts": "Starts",
+    "editModal": {
+      "title": "Edit Profile",
+      "photoHint": "Click the camera icon to change your photo",
+      "bio": "Bio",
+      "optional": "(optional)",
+      "address": "Address",
+      "dateOfBirth": "Date of Birth",
+      "twitter": "Twitter",
+      "linkedin": "LinkedIn",
+      "bioPlaceholder": "Write something about yourself...",
+      "addressPlaceholder": "Your city or state",
+      "cancel": "Cancel",
+      "save": "Save Changes",
+      "saving": "Saving..."
+    }
+  },
+  "results": {
+    "title": "Election Results",
+    "subtitle": "Live results from all elections",
+    "refresh": "Refresh",
+    "refreshing": "Refreshing...",
+    "loading": "Loading results...",
+    "noResults": "No election results available yet.",
+    "winner": "Winner",
+    "votes": "votes",
+    "parties": "parties",
+    "ended": "Ended",
+    "live": "Live",
+    "upcoming": "Upcoming",
+    "totalVotes": "Total Votes"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "save": "Save",
+    "cancel": "Cancel",
+    "close": "Close"
+  }
+}

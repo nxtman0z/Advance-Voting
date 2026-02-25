@@ -3,9 +3,11 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { FiMail, FiLock, FiLogIn } from "react-icons/fi";
 import { SiEthereum } from "react-icons/si";
+import { useTranslation } from "react-i18next";
 
 export default function Login() {
   const { login } = useAuth();
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   const [email, setEmail]       = useState("");
@@ -35,8 +37,8 @@ export default function Login() {
           <div className="flex items-center justify-center mx-auto mb-4">
             <img src="/logo.png" alt="Pollaris" className="w-16 h-16 rounded-2xl object-contain shadow-lg shadow-blue-600/30" />
           </div>
-          <h1 className="text-3xl font-bold text-white">Welcome to <span className="text-blue-400">Pollaris</span></h1>
-          <p className="text-slate-400 mt-1">Where Every Voice Finds Direction</p>
+          <h1 className="text-3xl font-bold text-white">{t("login.title").split("Pollaris")[0]}<span className="text-blue-400">Pollaris</span></h1>
+          <p className="text-slate-400 mt-1">{t("login.subtitle")}</p>
         </div>
 
         <div className="card p-8">
@@ -49,13 +51,13 @@ export default function Login() {
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Email */}
             <div>
-              <label className="block text-sm text-slate-300 mb-1">Email Address</label>
+              <label className="block text-sm text-slate-300 mb-1">{t("login.email")}</label>
               <div className="relative">
                 <FiMail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                 <input
                   type="email"
                   className="input-field pl-10"
-                  placeholder="you@example.com"
+                  placeholder={t("login.emailPlaceholder")}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -66,13 +68,13 @@ export default function Login() {
 
             {/* Password */}
             <div>
-              <label className="block text-sm text-slate-300 mb-1">Password</label>
+              <label className="block text-sm text-slate-300 mb-1">{t("login.password")}</label>
               <div className="relative">
                 <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                 <input
                   type="password"
                   className="input-field pl-10"
-                  placeholder="Your password"
+                  placeholder={t("login.passwordPlaceholder")}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -85,16 +87,16 @@ export default function Login() {
               {loading ? (
                 <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               ) : (
-                <><FiLogIn /> Sign In</>
+                <><FiLogIn /> {t("login.signIn")}</>
               )}
             </button>
           </form>
 
           <div className="mt-6 pt-5 border-t border-slate-700 text-center">
             <p className="text-slate-400 text-sm">
-              Don't have an account?{" "}
+              {t("login.noAccount")}{" "}
               <Link to="/register" className="text-blue-400 hover:underline font-medium">
-                Register here
+                {t("login.registerHere")}
               </Link>
             </p>
           </div>
