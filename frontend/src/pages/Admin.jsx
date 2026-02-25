@@ -837,19 +837,21 @@ function VoterDetailModal({ voter: u, onClose, UPLOADS_PHOTOS }) {
           >✕</button>
 
           {/* Avatar with status ring */}
-          <div className={`p-1 rounded-full ${u.isActive ? 'bg-gradient-to-br from-blue-500 to-purple-600' : 'bg-slate-700'} mb-3`}>
-            {u.photo ? (
-              <img
-                src={`${UPLOADS_PHOTOS}/${u.photo}`}
-                alt={u.fullName}
-                className="w-20 h-20 rounded-full object-cover ring-2 ring-[#0f1623]"
-                onError={(e) => { e.target.style.display = 'none'; }}
-              />
-            ) : (
-              <div className="w-20 h-20 rounded-full bg-slate-800 ring-2 ring-[#0f1623] flex items-center justify-center">
-                <span className="text-3xl font-black text-white">{u.fullName?.charAt(0)?.toUpperCase() || '?'}</span>
-              </div>
-            )}
+          <div className={`p-[3px] rounded-full ${u.isActive ? 'bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600' : 'bg-slate-600'} mb-3 shadow-xl`}>
+            <div className="p-0.5 rounded-full bg-[#0f1623]">
+              {u.photo ? (
+                <img
+                  src={`${UPLOADS_PHOTOS}/${u.photo}`}
+                  alt={u.fullName}
+                  className="w-24 h-24 rounded-full object-cover object-top"
+                  onError={(e) => { e.target.style.display = 'none'; }}
+                />
+              ) : (
+                <div className="w-24 h-24 rounded-full bg-slate-800 flex items-center justify-center">
+                  <span className="text-4xl font-black text-white">{u.fullName?.charAt(0)?.toUpperCase() || '?'}</span>
+                </div>
+              )}
+            </div>
           </div>
 
           <h3 className="text-lg font-bold text-white tracking-tight">{u.fullName}</h3>
