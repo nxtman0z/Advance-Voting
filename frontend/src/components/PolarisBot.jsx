@@ -156,91 +156,150 @@ export default function PolarisBot() {
   return (
     <>
       {/* ── Floating Button ── */}
-      <button
-        onClick={() => setOpen((o) => !o)}
-        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 shadow-2xl shadow-blue-500/40 flex items-center justify-center text-white text-2xl hover:scale-110 active:scale-95 transition-transform"
-        title="PolarisBot — Ask me anything!"
-      >
-        {open ? "✕" : "💬"}
-      </button>
+      <div className="fixed bottom-6 right-6 z-50">
+        {/* Pulse ring */}
+        {!open && (
+          <span className="absolute inset-0 rounded-full bg-blue-500/30 animate-ping pointer-events-none" />
+        )}
+        <button
+          onClick={() => setOpen((o) => !o)}
+          className={`relative w-14 h-14 rounded-full shadow-2xl flex items-center justify-center transition-all duration-300 ${
+            open
+              ? "bg-slate-700 hover:bg-slate-600 text-white text-xl rotate-0"
+              : "bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 shadow-blue-500/40 hover:scale-110 active:scale-95 text-2xl"
+          }`}
+          title="PolarisBot — Ask me anything!"
+        >
+          {open ? "✕" : "💬"}
+        </button>
+      </div>
 
       {/* ── Chat Window ── */}
       {open && (
         <div
-          className="fixed bottom-24 right-6 z-50 w-[340px] sm:w-[380px] flex flex-col bg-[#0d1421] border border-white/10 rounded-3xl shadow-2xl overflow-hidden"
-          style={{ maxHeight: "520px", animation: "chatUp .2s cubic-bezier(.4,0,.2,1)" }}
+          className="fixed bottom-24 right-6 z-50 w-[340px] sm:w-[390px] flex flex-col rounded-3xl overflow-hidden shadow-2xl shadow-black/60"
+          style={{
+            maxHeight: "560px",
+            background: "linear-gradient(145deg, #0e1729 0%, #0b1120 100%)",
+            border: "1px solid rgba(99,102,241,0.2)",
+            animation: "chatUp .22s cubic-bezier(.4,0,.2,1)",
+          }}
         >
-          {/* Header */}
-          <div className="flex items-center gap-3 px-4 py-3.5 bg-gradient-to-r from-blue-900/80 to-purple-900/60 border-b border-white/8">
-            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-lg flex-shrink-0">🤖</div>
-            <div>
-              <p className="text-white font-bold text-sm leading-none">PolarisBot</p>
-              <p className="text-green-400 text-xs mt-0.5 flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-green-400 inline-block" />
-                Online — always ready
+          {/* ── Header ── */}
+          <div className="relative flex items-center gap-3 px-4 py-4 overflow-hidden flex-shrink-0">
+            {/* bg glow */}
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-600/15 via-purple-600/10 to-transparent pointer-events-none" />
+            <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-blue-500/40 via-purple-500/30 to-transparent" />
+
+            {/* Bot avatar */}
+            <div className="relative flex-shrink-0">
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-xl shadow-lg shadow-blue-500/30">
+                🤖
+              </div>
+              <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-400 rounded-full border-2 border-[#0e1729]" />
+            </div>
+
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <p className="text-white font-bold text-sm">PolarisBot</p>
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-500/20 border border-blue-500/30 text-blue-300 font-medium">AI</span>
+              </div>
+              <p className="text-green-400 text-xs flex items-center gap-1 mt-0.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse inline-block" />
+                Always online
               </p>
             </div>
-            <button onClick={() => setOpen(false)} className="ml-auto text-slate-400 hover:text-white transition-colors text-sm">✕</button>
+
+            <button
+              onClick={() => setOpen(false)}
+              className="w-8 h-8 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white flex items-center justify-center transition-all text-xs border border-white/5"
+            >✕</button>
           </div>
 
-          {/* Messages */}
-          <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 scrollbar-thin" style={{ minHeight: 0 }}>
+          {/* ── Messages ── */}
+          <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3" style={{ minHeight: 0 }}>
             {messages.map((m, i) => (
-              <div key={i} className={`flex gap-2 ${m.from === "user" ? "justify-end" : "justify-start"}`}>
+              <div key={i} className={`flex gap-2 items-end ${m.from === "user" ? "justify-end" : "justify-start"}`}>
                 {m.from === "bot" && (
-                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-sm flex-shrink-0 mt-0.5">🤖</div>
+                  <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-sm flex-shrink-0 mb-0.5 shadow-md shadow-blue-500/20">
+                    🤖
+                  </div>
                 )}
-                <div className={`px-3.5 py-2.5 rounded-2xl max-w-[80%] ${
-                  m.from === "user"
-                    ? "bg-blue-600 text-white rounded-br-sm"
-                    : "bg-slate-800/80 text-slate-300 rounded-bl-sm border border-white/5"
-                }`}>
+                <div
+                  className={`px-3.5 py-2.5 rounded-2xl max-w-[78%] text-sm leading-relaxed ${
+                    m.from === "user"
+                      ? "bg-gradient-to-br from-blue-600 to-indigo-600 text-white rounded-br-sm shadow-lg shadow-blue-500/20"
+                      : "text-slate-300 rounded-bl-sm"
+                  }`}
+                  style={
+                    m.from === "bot"
+                      ? { background: "rgba(30,41,59,0.8)", border: "1px solid rgba(255,255,255,0.06)" }
+                      : {}
+                  }
+                >
                   <MsgText text={m.text} />
                 </div>
+                {m.from === "user" && (
+                  <div className="w-7 h-7 rounded-xl bg-slate-700 flex items-center justify-center text-sm flex-shrink-0 mb-0.5">
+                    👤
+                  </div>
+                )}
               </div>
             ))}
 
             {typing && (
-              <div className="flex gap-2 justify-start">
-                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-sm flex-shrink-0">🤖</div>
-                <div className="bg-slate-800/80 border border-white/5 px-4 py-3 rounded-2xl rounded-bl-sm flex gap-1 items-center">
-                  <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                  <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                  <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+              <div className="flex gap-2 items-end justify-start">
+                <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-sm flex-shrink-0">🤖</div>
+                <div className="px-4 py-3 rounded-2xl rounded-bl-sm flex gap-1.5 items-center" style={{ background: "rgba(30,41,59,0.8)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                  <span className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                  <span className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                  <span className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
                 </div>
               </div>
             )}
             <div ref={bottomRef} />
           </div>
 
-          {/* Suggestions */}
-          <div className="px-3 py-2 flex gap-1.5 flex-wrap border-t border-white/5 bg-slate-900/40">
+          {/* ── Suggestion chips ── */}
+          <div className="px-3 pt-2 pb-1.5 flex gap-1.5 flex-wrap" style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
             {SUGGESTIONS.map((s) => (
               <button
                 key={s}
                 onClick={() => send(s)}
-                className="text-[11px] px-2.5 py-1 rounded-full bg-blue-600/15 border border-blue-500/25 text-blue-300 hover:bg-blue-600/25 transition-colors whitespace-nowrap"
+                className="text-[11px] px-2.5 py-1 rounded-full font-medium transition-all whitespace-nowrap hover:scale-105 active:scale-95"
+                style={{
+                  background: "rgba(59,130,246,0.1)",
+                  border: "1px solid rgba(99,102,241,0.25)",
+                  color: "#93c5fd",
+                }}
               >
                 {s}
               </button>
             ))}
           </div>
 
-          {/* Input */}
-          <div className="px-3 py-3 border-t border-white/5 flex gap-2 bg-slate-900/60">
+          {/* ── Input ── */}
+          <div className="px-3 py-3 flex gap-2" style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
             <input
               ref={inputRef}
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && send()}
-              placeholder="Ask me anything..."
-              className="flex-1 bg-slate-800/60 border border-white/10 text-white text-sm placeholder-slate-600 rounded-xl px-3.5 py-2 focus:outline-none focus:border-blue-500/50 transition-colors"
+              placeholder="Ask me anything about Pollaris..."
+              className="flex-1 text-sm placeholder-slate-600 text-white rounded-2xl px-4 py-2.5 focus:outline-none transition-all"
+              style={{
+                background: "rgba(15,23,42,0.8)",
+                border: "1px solid rgba(99,102,241,0.2)",
+              }}
+              onFocus={(e) => (e.target.style.borderColor = "rgba(99,102,241,0.6)")}
+              onBlur={(e) => (e.target.style.borderColor = "rgba(99,102,241,0.2)")}
             />
             <button
               onClick={() => send()}
               disabled={!input.trim()}
-              className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center text-white disabled:opacity-30 hover:opacity-90 transition-opacity flex-shrink-0"
+              className="w-10 h-10 rounded-2xl flex items-center justify-center text-white font-bold transition-all disabled:opacity-25 hover:scale-105 active:scale-95 flex-shrink-0"
+              style={{ background: "linear-gradient(135deg, #3b82f6, #8b5cf6)" }}
             >
               ➤
             </button>
@@ -249,7 +308,10 @@ export default function PolarisBot() {
       )}
 
       <style>{`
-        @keyframes chatUp { from { opacity:0; transform:translateY(12px) scale(.97) } to { opacity:1; transform:translateY(0) scale(1) } }
+        @keyframes chatUp {
+          from { opacity: 0; transform: translateY(16px) scale(0.96); }
+          to   { opacity: 1; transform: translateY(0)    scale(1);    }
+        }
       `}</style>
     </>
   );
