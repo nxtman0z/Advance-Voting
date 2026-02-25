@@ -79,19 +79,19 @@ function EditProfileModal({ user, onClose, onSave }) {
                   <FiCamera size={13} className="text-white" />
                 </button>
               </div>
-              <p className="text-slate-500 text-xs">Camera icon se photo change karo</p>
+              <p className="text-slate-500 text-xs">Click the camera icon to change your photo</p>
               <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handlePhoto} />
             </div>
             <div>
               <label className="text-slate-400 text-xs font-medium flex items-center gap-1.5 mb-1.5"><FiFileText size={12} /> Bio <span className="text-slate-600 ml-1">(optional)</span></label>
-              <textarea rows={3} value={form.bio} onChange={(e) => setForm((p) => ({ ...p, bio: e.target.value }))} placeholder="Apne baare mein kuch likho..." maxLength={300}
+              <textarea rows={3} value={form.bio} onChange={(e) => setForm((p) => ({ ...p, bio: e.target.value }))} placeholder="Write something about yourself..." maxLength={300}
                 className="w-full rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-600 resize-none focus:outline-none transition-all"
                 style={{ background: "rgba(15,23,42,.8)", border: "1px solid rgba(99,102,241,.2)" }}
                 onFocus={(e) => (e.target.style.borderColor = "rgba(99,102,241,.6)")} onBlur={(e) => (e.target.style.borderColor = "rgba(99,102,241,.2)")} />
             </div>
             <div>
               <label className="text-slate-400 text-xs font-medium flex items-center gap-1.5 mb-1.5"><FiMapPin size={12} /> Address <span className="text-slate-600 ml-1">(optional)</span></label>
-              <input type="text" value={form.address} onChange={(e) => setForm((p) => ({ ...p, address: e.target.value }))} placeholder="Apna city ya state"
+              <input type="text" value={form.address} onChange={(e) => setForm((p) => ({ ...p, address: e.target.value }))} placeholder="Your city or state"
                 className="w-full rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none transition-all"
                 style={{ background: "rgba(15,23,42,.8)", border: "1px solid rgba(99,102,241,.2)" }}
                 onFocus={(e) => (e.target.style.borderColor = "rgba(99,102,241,.6)")} onBlur={(e) => (e.target.style.borderColor = "rgba(99,102,241,.2)")} />
@@ -187,7 +187,7 @@ export default function Dashboard() {
 
             <div className="flex flex-wrap gap-2 justify-center sm:justify-start text-sm mt-3">
               <span className="bg-slate-700/50 border border-slate-600/50 text-slate-300 px-3 py-1 rounded-lg">&#128222; {user.phone || "-"}</span>
-              {user.voterId && <span className="bg-slate-700/50 border border-slate-600/50 text-slate-300 px-3 py-1 rounded-lg font-mono">&#129498; {user.voterId}</span>}
+              {user.voterId && <span className="bg-slate-700/50 border border-slate-600/50 text-slate-300 px-3 py-1 rounded-lg font-mono">&#128196; {user.voterId}</span>}
               {user.gender && (
                 <span className="bg-slate-700/50 border border-slate-600/50 text-slate-300 px-3 py-1 rounded-lg capitalize">
                   {user.gender === "male" ? "\u2642" : user.gender === "female" ? "\u2640" : "\u26A7"} {user.gender}
