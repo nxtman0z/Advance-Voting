@@ -22,13 +22,31 @@ export default function AdminLogin() {
 
   const handleConnect = async () => {
     setError("");
-    if (!window.ethereum) {
-      setError("MetaMask not detected. Please install MetaMask to continue.");
+    setLoading(true);
+
+    // MetaMask sometimes injects window.ethereum slightly after page load — retry briefly
+    let ethereum = window.ethereum;
+    if (!ethereum) {
+      await new Promise((r) => setTimeout(r, 500));
+      ethereum = window.ethereum;
+    }
+
+    if (!ethereum) {
+      setLoading(false);
+      setError(
+        "MetaMask not detected. Make sure: (1) MetaMask extension is installed in this browser, (2) the extension is enabled, (3) try refreshing the page."
+      );
       return;
     }
-    setLoading(true);
+
     try {
-      const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
+      // Always force MetaMask approval popup — never silently reconnect
+      await ethereum.request({
+        method: "wallet_requestPermissions",
+        params: [{ eth_accounts: {} }],
+      });
+      const accounts = await ethereum.request({ method: "eth_accounts" });
+      if (!accounts || accounts.length === 0) throw new Error("No account selected.");
       setAddress(accounts[0]);
       setStep(1);
       toast.success(`Wallet connected: ${accounts[0].slice(0, 6)}...${accounts[0].slice(-4)}`);
@@ -115,7 +133,27 @@ export default function AdminLogin() {
             {error && (
               <div className="flex items-start gap-2.5 bg-red-500/10 border border-red-500/25 text-red-400 text-sm px-4 py-3 rounded-xl mb-6">
                 <FiAlertCircle size={15} className="mt-0.5 shrink-0" />
-                <span>{error}</span>
+                <div className="space-y-2">
+                  <span>{error}</span>
+                  {error.includes("not detected") && (
+                    <div className="flex gap-2 flex-wrap">
+                      <a
+                        href="https://metamask.io/download/"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1 text-xs bg-orange-500/20 border border-orange-500/40 text-orange-300 hover:text-orange-200 px-2 py-1 rounded-lg transition-colors"
+                      >
+                        <SiEthereum size={11} /> Install MetaMask
+                      </a>
+                      <button
+                        onClick={() => window.location.reload()}
+                        className="inline-flex items-center gap-1 text-xs bg-slate-700/60 border border-slate-600/40 text-slate-300 hover:text-white px-2 py-1 rounded-lg transition-colors"
+                      >
+                        Refresh Page
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 
@@ -165,11 +203,6 @@ export default function AdminLogin() {
                 <div className="flex items-center gap-2 bg-green-500/10 border border-green-500/25 rounded-xl px-4 py-3">
                   <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse shrink-0" />
                   <span className="text-xs text-green-300 font-mono break-all">{address}</span>
-                </div>
-
-                <div className="bg-slate-800/50 border border-slate-700/40 rounded-xl px-4 py-3 text-sm text-slate-400 flex items-start gap-2">
-                  <FiZap size={14} className="text-yellow-400 mt-0.5 shrink-0" />
-                  Signing is free - this does <span className="text-white font-semibold mx-1">not</span> trigger any blockchain transaction.
                 </div>
 
                 <button
